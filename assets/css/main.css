@@ -2666,7 +2666,7 @@ input, select, textarea {
 
 		ul.contact li {
 			text-decoration: none;
-			margin: 2.5em 0 0 0;
+			margin: 1em 0 0 0;
 			padding: 0 0 0 3.25em;
 			position: relative;
 		}
@@ -4016,17 +4016,17 @@ input, select, textarea {
 
 		#footer .inner form {
 			margin: 0 3em 0 0;
-			width: calc(50% - 1.5em);
+			width: calc(80% - 1.5em);
 		}
 
 		#footer .inner .contact {
-			width: calc(50% - 1.5em);
+			width: calc(80% - 1.5em);
 		}
 
 		#footer .inner .copyright {
 			border-top: solid 2px rgba(255, 255, 255, 0.125);
 			list-style: none;
-			margin: 4em 0 2em 0;
+			margin: 1em 0 2em 0;
 			padding: 2em 0 0 0;
 			width: 100%;
 		}
@@ -4308,4 +4308,65 @@ img {
   max-width: 100%;
   height: auto;
   display: block;
+}
+
+/* ----- Contact page ----- */
+ul.contact.three-col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  row-gap: 3rem;
+  column-gap: 4rem;
+  align-items: start;
+  padding: 0;
+}
+
+/* make address (and any .fullwidth) span the full grid row */
+ul.contact.three-col > li.address,
+ul.contact.three-col > li.fullwidth {
+  grid-column: 1 / -1;
+  padding-left: 3.25em; /* keep icon alignment if you use the icon classes */
+}
+
+/* optional: pull linkedin up if it is a full-width li with icon classes */
+ul.contact.three-col > li.icon.brands.fa-linkedin {
+  margin-top: -1rem;
+}
+
+/* each person becomes a column */
+ul.contact.three-col > li.person {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+/* hide the default contact bullet/icon for the person wrapper */
+ul.contact.three-col > li.person:before {
+  display: none;
+}
+
+/* inner list of details keeps the same contact styles but reset spacing */
+ul.contact.three-col > li.person > ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* person heading spacing */
+ul.contact.three-col > li.person h3.minor {
+  margin: 0 0 0.75rem 0;
+  padding-left: 0;
+  text-transform: uppercase;
+  font-size: 0.9em;
+}
+
+/* responsive: stack columns on narrow screens */
+@media screen and (max-width: 880px) {
+  ul.contact.three-col {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  ul.contact.three-col > li.address {
+    grid-column: 1 / -1;
+  }
 }
