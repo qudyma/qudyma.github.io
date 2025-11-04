@@ -4369,3 +4369,15 @@ ul.contact.three-col > li.person h3.minor {
     grid-column: 1 / -1;
   }
 }
+
+.icon.solid.GoogleScholar {
+  display: inline-block;
+  width: 1em;               /* size of the icon relative to text */
+  height: 1em;
+  vertical-align: -0.11em;   /* aligns nicely with the link text */
+
+  background-image: url('/../images/icons/GoogleScholar.svg');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
