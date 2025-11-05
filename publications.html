@@ -12,6 +12,35 @@
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 		<link rel="icon" type="image/svg" href="../images/icons/QUDYMA_fabicon.svg">
+		<style>
+			#preprints-scroll-wrapper {
+				max-height: 600px;
+				overflow-y: scroll;
+				scrollbar-gutter: stable;
+				border: 1px solid #ddd;
+				padding: 15px;
+				border-radius: 5px;
+				background-color: #555;
+			}
+			
+			#preprints-scroll-wrapper::-webkit-scrollbar {
+				width: 8px;
+			}
+			
+			#preprints-scroll-wrapper::-webkit-scrollbar-track {
+				background: #f1f1f1;
+				border-radius: 5px;
+			}
+			
+			#preprints-scroll-wrapper::-webkit-scrollbar-thumb {
+				background: #888;
+				border-radius: 5px;
+			}
+			
+			#preprints-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+				background: #fafafa;
+			}
+		</style>
 	</head>
 	<body class="is-preload">
 
@@ -51,7 +80,9 @@
 								<div class="inner">
                                     <h2 class="major">Preprints</h2>
                                     <p>Search through the latest arXiv submissions from our members </p>
-									<div id="preprints-container"></div>
+									<div id="preprints-scroll-wrapper">
+										<div id="preprints-container"></div>
+									</div>
 
 									<h2 class="major">Publication library</h2>
 									<p>Search through the publication history of our members</p>
