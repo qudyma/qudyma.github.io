@@ -333,6 +333,40 @@ function displayPublications(publications) {
             referencesLine = arxivLink;
         }
         
+        // Build awards line if awards exist
+        let awardsLine = '';
+        if (pub.awards && Array.isArray(pub.awards) && pub.awards.length > 0) {
+            const awardLinks = pub.awards.map(award => {
+                if (award.type && award.url) {
+                    return `<a href="${award.url}" style="color: inherit;">${award.type}</a>`;
+                } else if (award.type) {
+                    return award.type;
+                }
+                return null;
+            }).filter(link => link !== null);
+            
+            if (awardLinks.length > 0) {
+                awardsLine = `<br><span style="font-size: 1.1em; font-style: italic;">Awards: ${awardLinks.join(', ')}</span>`;
+            }
+        }
+        
+        // Build coverage line if coverage exists
+        let coverageLine = '';
+        if (pub.coverage && Array.isArray(pub.coverage) && pub.coverage.length > 0) {
+            const coverageLinks = pub.coverage.map(coverage => {
+                if (coverage.source && coverage.url) {
+                    return `<a href="${coverage.url}" style="color: inherit;">${coverage.source}</a>`;
+                } else if (coverage.source) {
+                    return coverage.source;
+                }
+                return null;
+            }).filter(link => link !== null);
+            
+            if (coverageLinks.length > 0) {
+                coverageLine = `<br><span style="font-size: 1.1em; font-style: italic;">Featured in: ${coverageLinks.join(', ')}</span>`;
+            }
+        }
+        
         // Extract year from journal_ref for grouping (journal publication year, not arXiv date)
         let yearKey = extractPublicationYear(pub);
         
@@ -352,7 +386,7 @@ function displayPublications(publications) {
                 <br>
                 <span style="font-size: 1.1em;">${authorsFormatted}</span>
                 <br>
-                ${referencesLine}
+                ${referencesLine}${awardsLine}${coverageLine}
             </p>
         `;
     }).join('');
