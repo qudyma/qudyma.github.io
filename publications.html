@@ -15,30 +15,96 @@
 		<style>
 			#preprints-scroll-wrapper {
 				max-height: 600px;
-				overflow-y: scroll;
+				overflow-y: scroll !important;
 				scrollbar-gutter: stable;
 				border: 1px solid #ddd;
 				padding: 15px;
 				border-radius: 5px;
 				background-color: #555;
+				scrollbar-width: thin !important;
+				scrollbar-color: #888 #f1f1f1 !important;
 			}
 			
 			#preprints-scroll-wrapper::-webkit-scrollbar {
-				width: 8px;
+				width: 12px !important;
 			}
 			
 			#preprints-scroll-wrapper::-webkit-scrollbar-track {
-				background: #f1f1f1;
+				background: #f1f1f1 !important;
 				border-radius: 5px;
 			}
 			
 			#preprints-scroll-wrapper::-webkit-scrollbar-thumb {
-				background: #888;
+				background: #888 !important;
 				border-radius: 5px;
+				min-height: 40px;
 			}
 			
 			#preprints-scroll-wrapper::-webkit-scrollbar-thumb:hover {
-				background: #fafafa;
+				background: #555 !important;
+			}
+
+			#preprints-search {
+				width: 100%;
+				padding: 10px;
+				margin-bottom: 15px;
+				font-size: 1em;
+				border: 1px solid #ddd;
+				border-radius: 5px;
+				box-sizing: border-box;
+			}
+
+			#preprints-search:focus {
+				outline: none;
+				border-color: #0066cc;
+				box-shadow: 0 0 5px rgba(0, 102, 204, 0.3);
+			}
+
+			#publications-scroll-wrapper {
+				max-height: 600px;
+				overflow-y: scroll !important;
+				scrollbar-gutter: stable;
+				border: 1px solid #ddd;
+				padding: 15px;
+				border-radius: 5px;
+				background-color: #555;
+				scrollbar-width: thin !important;
+				scrollbar-color: #888 #f1f1f1 !important;
+			}
+			
+			#publications-scroll-wrapper::-webkit-scrollbar {
+				width: 12px !important;
+			}
+			
+			#publications-scroll-wrapper::-webkit-scrollbar-track {
+				background: #f1f1f1 !important;
+				border-radius: 5px;
+			}
+			
+			#publications-scroll-wrapper::-webkit-scrollbar-thumb {
+				background: #888 !important;
+				border-radius: 5px;
+				min-height: 40px;
+			}
+			
+			#publications-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+				background: #555 !important;
+			}
+
+			#publications-search {
+				width: 100%;
+				padding: 10px;
+				margin-bottom: 15px;
+				font-size: 1em;
+				border: 1px solid #ddd;
+				border-radius: 5px;
+				box-sizing: border-box;
+			}
+
+			#publications-search:focus {
+				outline: none;
+				border-color: #0066cc;
+				box-shadow: 0 0 5px rgba(0, 102, 204, 0.3);
 			}
 		</style>
 	</head>
@@ -79,13 +145,16 @@
 							<section id="four" class="wrapper alt style1">
 								<div class="inner">
                                     <h2 class="major">Preprints</h2>
-                                    <p>Search through the latest arXiv submissions from our members </p>
+									<input type="text" id="preprints-search" placeholder="Search through the latest arXiv submissions from our members by title, authors, keywords...">
 									<div id="preprints-scroll-wrapper">
 										<div id="preprints-container"></div>
 									</div>
-
+									<br>
 									<h2 class="major">Publication library</h2>
-									<p>Search through the publication history of our members</p>
+									<input type="text" id="publications-search" placeholder="Search through the publication history of our members by title, authors, keywords...">
+									<div id="publications-scroll-wrapper">
+										<div id="publications-container"></div>
+									</div>
 
 									<!-- <h2 class="major">Highlighted works</h2>
 									<p>Works that best demonstrate our expertise</p>
