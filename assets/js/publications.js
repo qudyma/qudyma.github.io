@@ -5,7 +5,9 @@ let filteredPreprints = [];
 let filteredPublications = [];
 let qudymaAuthorsMap = {};
 let qudymaAuthorsUrls = {};
+let qudymaAuthorsById = {};
 let activeMembers = [];
+let canonicalNameToId = {}; // map canonical author name -> author id from basics.json
 let selectedFilters = new Set(); // Single filter set shared across both views
 let yearRange = { min: 2020, max: new Date().getFullYear() }; // Single year range shared across both views
 let currentView = 'preprints'; // Track current view: 'preprints' or 'publications'
@@ -366,12 +368,17 @@ function filterPreprints() {
     // Apply author filters
     if (selectedFilters.size > 0) {
         filteredPreprints = filteredPreprints.filter(pub => {
-            const authorsList = pub.authors.toLowerCase();
+            const authorsList = (pub.authors || '').toLowerCase();
             const normalizedAuthors = normalizeText(authorsList);
+            const pubAuthorIds = Array.isArray(pub.author_ids) ? pub.author_ids : [];
             // Check if ALL selected authors are in this publication (AND logic)
             return Array.from(selectedFilters).every(selectedAuthor => {
                 const normalizedAuthor = normalizeText(selectedAuthor.toLowerCase());
-                return normalizedAuthors.includes(normalizedAuthor);
+                // Match by name (legacy) OR by author_ids if available
+                if (normalizedAuthors.includes(normalizedAuthor)) return true;
+                const authorId = canonicalNameToId[selectedAuthor];
+                if (authorId && pubAuthorIds.includes(authorId)) return true;
+                return false;
             });
         });
     }
@@ -409,12 +416,17 @@ function filterPublications() {
     // Apply author filters
     if (selectedFilters.size > 0) {
         filteredPublications = filteredPublications.filter(pub => {
-            const authorsList = pub.authors.toLowerCase();
+            const authorsList = (pub.authors || '').toLowerCase();
             const normalizedAuthors = normalizeText(authorsList);
+            const pubAuthorIds = Array.isArray(pub.author_ids) ? pub.author_ids : [];
             // Check if ALL selected authors are in this publication (AND logic)
             return Array.from(selectedFilters).every(selectedAuthor => {
                 const normalizedAuthor = normalizeText(selectedAuthor.toLowerCase());
-                return normalizedAuthors.includes(normalizedAuthor);
+                // Match by name (legacy) OR by author_ids if available
+                if (normalizedAuthors.includes(normalizedAuthor)) return true;
+                const authorId = canonicalNameToId[selectedAuthor];
+                if (authorId && pubAuthorIds.includes(authorId)) return true;
+                return false;
             });
         });
     }
@@ -463,22 +475,27 @@ async function loadPreprints() {
         const configData = await configResponse.json();
         
         // Extract QUDYMA author names and their variants, and identify active members
-        Object.values(configData).forEach(member => {
-            if (member.name) {
-                qudymaAuthorsMap[member.name.toLowerCase()] = member.name; // Store canonical name
-                if (member.url) {
-                    qudymaAuthorsUrls[member.name.toLowerCase()] = member.url;
-                }
+        // basics.json is keyed by author id; iterate entries to capture ids
+        Object.entries(configData).forEach(([authorId, member]) => {
+            if (member && member.name) {
+                const canonical = member.name;
+                // Map lowercase name/variants to canonical name
+                qudymaAuthorsMap[canonical.toLowerCase()] = canonical; // Store canonical name
+                canonicalNameToId[canonical] = authorId; // map canonical name -> id
                 
+                if (member.url) {
+                    qudymaAuthorsUrls[canonical.toLowerCase()] = member.url;
+                }
+
                 // Check if member is active (has date_in and date_out is null)
                 if (member.date_in && !member.date_out) {
-                    activeMembers.push(member.name);
+                    activeMembers.push(canonical);
                 }
-                
-                // Also add name variants, but map them to the canonical name
+
+                // Also add name variants, but map them to the canonical name and id
                 if (member.name_variants) {
                     member.name_variants.forEach(variant => {
-                        qudymaAuthorsMap[variant.toLowerCase()] = member.name; // Map variant to canonical name
+                        qudymaAuthorsMap[variant.toLowerCase()] = canonical; // Map variant to canonical name
                         if (member.url) {
                             qudymaAuthorsUrls[variant.toLowerCase()] = member.url;
                         }
@@ -500,6 +517,12 @@ async function loadPreprints() {
         // Parse JSON
         const data = await response.json();
         const publications = data.entries || [];
+        
+        console.log('Total entries:', publications.length);
+        console.log('Entries with arxiv_url:', publications.filter(p => p.arxiv_url).length);
+        console.log('Entries with journal_ref:', publications.filter(p => p.journal_ref).length);
+        console.log('Entries with arxiv_url AND NO journal_ref:', publications.filter(p => p.arxiv_url && !p.journal_ref).length);
+        console.log('Entries with arxiv_url AND journal_ref:', publications.filter(p => p.arxiv_url && p.journal_ref).length);
         
         // Filter for preprints (entries without journal_ref but with arxiv_url)
         allPreprints = publications.filter(pub => !pub.journal_ref && pub.arxiv_url);
