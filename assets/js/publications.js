@@ -6,17 +6,197 @@ let filteredPublications = [];
 let qudymaAuthorsMap = {};
 let qudymaAuthorsUrls = {};
 let activeMembers = [];
-let selectedPreprintFilters = new Set();
-let selectedPublicationFilters = new Set();
-let preprintsYearRange = { min: 2020, max: new Date().getFullYear() };
-let publicationsYearRange = { min: 2020, max: new Date().getFullYear() };
+let selectedFilters = new Set(); // Single filter set shared across both views
+let yearRange = { min: 2020, max: new Date().getFullYear() }; // Single year range shared across both views
+let currentView = 'preprints'; // Track current view: 'preprints' or 'publications'
 
 // Helper function to normalize text by removing accents and diacritics
 function normalizeText(text) {
     return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-// Function to create filter buttons for active members
+// Function to update the results counter
+function updateResultsCounter(count) {
+    const counter = document.querySelector('.search-results-counter');
+    if (counter) {
+        counter.textContent = count + ' result' + (count !== 1 ? 's' : '');
+    }
+}
+
+// Function to switch between preprints and publications view
+function switchView(view) {
+    currentView = view;
+    
+    // Update toggle buttons and slider
+    const slider = document.querySelector('.toggle-slider');
+    document.querySelectorAll('.toggle-button').forEach(btn => {
+        if (btn.dataset.view === view) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    // Animate slider position
+    if (slider) {
+        if (view === 'preprints') {
+            slider.classList.remove('publications');
+        } else {
+            slider.classList.add('publications');
+        }
+    }
+    
+    // Update filters to match current view
+    updateFiltersForView();
+    
+    // Trigger appropriate filter
+    if (view === 'preprints') {
+        filterPreprints();
+    } else {
+        filterPublications();
+    }
+}
+
+// Function to update filters for current view
+function updateFiltersForView() {
+    const filterContainer = document.getElementById('publications-filters');
+    const yearSliderContainer = document.getElementById('publications-year-slider');
+    
+    if (!filterContainer || !yearSliderContainer) return;
+    
+    // Clear existing filters
+    filterContainer.innerHTML = '';
+    yearSliderContainer.innerHTML = '';
+    
+    // Use shared filter set for all views
+    const filterSet = selectedFilters;
+    
+    // Recreate filter buttons
+    activeMembers.forEach(memberName => {
+        const button = document.createElement('span');
+        button.className = 'author-filter';
+        button.textContent = formatAuthorAsInitials(memberName);
+        button.dataset.author = memberName;
+        
+        // Set active state if in filter set
+        if (filterSet.has(memberName)) {
+            button.classList.add('active');
+        }
+        
+        button.addEventListener('click', function() {
+            // Use shared filter set
+            if (this.classList.contains('active')) {
+                this.classList.remove('active');
+                selectedFilters.delete(memberName);
+            } else {
+                this.classList.add('active');
+                selectedFilters.add(memberName);
+            }
+            
+            // Trigger search update
+            if (currentView === 'preprints') {
+                filterPreprints();
+            } else {
+                filterPublications();
+            }
+        });
+        
+        filterContainer.appendChild(button);
+    });
+    
+    // Recreate year slider
+    const currentYear = new Date().getFullYear();
+    const minYear = 2020;
+    
+    yearSliderContainer.innerHTML = `
+        <div class="year-slider-container">
+            <div class="year-range-inputs">
+                <span class="year-slider-label">Year:</span>
+                <input type="number" id="unified-year-min" class="year-input" min="${minYear}" max="${currentYear}" value="${yearRange.min}">
+                <span class="year-separator">–</span>
+                <input type="number" id="unified-year-max" class="year-input" min="${minYear}" max="${currentYear}" value="${yearRange.max}">
+            </div>
+        </div>
+    `;
+    
+    // Add event listeners for year inputs
+    const minInput = document.getElementById('unified-year-min');
+    const maxInput = document.getElementById('unified-year-max');
+    
+    minInput.addEventListener('change', function() {
+        let minValue = parseInt(this.value);
+        let maxValue = parseInt(maxInput.value);
+        
+        if (isNaN(minValue) || minValue < minYear) {
+            minValue = minYear;
+            this.value = minValue;
+        }
+        if (minValue > currentYear) {
+            minValue = currentYear;
+            this.value = minValue;
+        }
+        if (minValue > maxValue) {
+            minValue = maxValue;
+            this.value = minValue;
+        }
+        
+        yearRange.min = minValue;
+        
+        if (currentView === 'preprints') {
+            filterPreprints();
+        } else {
+            filterPublications();
+        }
+    });
+    
+    minInput.addEventListener('blur', function() {
+        this.dispatchEvent(new Event('change'));
+    });
+    
+    minInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            this.blur();
+        }
+    });
+    
+    maxInput.addEventListener('change', function() {
+        let minValue = parseInt(minInput.value);
+        let maxValue = parseInt(this.value);
+        
+        if (isNaN(maxValue) || maxValue > currentYear) {
+            maxValue = currentYear;
+            this.value = maxValue;
+        }
+        if (maxValue < minYear) {
+            maxValue = minYear;
+            this.value = maxValue;
+        }
+        if (maxValue < minValue) {
+            maxValue = minValue;
+            this.value = maxValue;
+        }
+        
+        yearRange.max = maxValue;
+        
+        if (currentView === 'preprints') {
+            filterPreprints();
+        } else {
+            filterPublications();
+        }
+    });
+    
+    maxInput.addEventListener('blur', function() {
+        this.dispatchEvent(new Event('change'));
+    });
+    
+    maxInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            this.blur();
+        }
+    });
+}
+
+// Function to create filter buttons for active members (legacy - kept for compatibility)
 function createFilterButtons(containerId, section) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -167,7 +347,7 @@ function createYearSlider(containerId, section) {
 
 // Function to filter preprints based on search and active filters
 function filterPreprints() {
-    const searchInput = document.getElementById('preprints-search');
+    const searchInput = document.getElementById('publications-search');
     const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
     filteredPreprints = allPreprints;
     
@@ -184,12 +364,12 @@ function filterPreprints() {
     }
     
     // Apply author filters
-    if (selectedPreprintFilters.size > 0) {
+    if (selectedFilters.size > 0) {
         filteredPreprints = filteredPreprints.filter(pub => {
             const authorsList = pub.authors.toLowerCase();
             const normalizedAuthors = normalizeText(authorsList);
             // Check if ALL selected authors are in this publication (AND logic)
-            return Array.from(selectedPreprintFilters).every(selectedAuthor => {
+            return Array.from(selectedFilters).every(selectedAuthor => {
                 const normalizedAuthor = normalizeText(selectedAuthor.toLowerCase());
                 return normalizedAuthors.includes(normalizedAuthor);
             });
@@ -201,9 +381,10 @@ function filterPreprints() {
         const year = extractPublicationYear(pub);
         if (!year) return true; // Include if no year available
         const yearNum = parseInt(year);
-        return yearNum >= preprintsYearRange.min && yearNum <= preprintsYearRange.max;
+        return yearNum >= yearRange.min && yearNum <= yearRange.max;
     });
     
+    updateResultsCounter(filteredPreprints.length);
     displayPreprints(filteredPreprints);
 }
 
@@ -226,12 +407,12 @@ function filterPublications() {
     }
     
     // Apply author filters
-    if (selectedPublicationFilters.size > 0) {
+    if (selectedFilters.size > 0) {
         filteredPublications = filteredPublications.filter(pub => {
             const authorsList = pub.authors.toLowerCase();
             const normalizedAuthors = normalizeText(authorsList);
             // Check if ALL selected authors are in this publication (AND logic)
-            return Array.from(selectedPublicationFilters).every(selectedAuthor => {
+            return Array.from(selectedFilters).every(selectedAuthor => {
                 const normalizedAuthor = normalizeText(selectedAuthor.toLowerCase());
                 return normalizedAuthors.includes(normalizedAuthor);
             });
@@ -243,9 +424,10 @@ function filterPublications() {
         const year = extractPublicationYear(pub);
         if (!year) return true; // Include if no year available
         const yearNum = parseInt(year);
-        return yearNum >= publicationsYearRange.min && yearNum <= publicationsYearRange.max;
+        return yearNum >= yearRange.min && yearNum <= yearRange.max;
     });
     
+    updateResultsCounter(filteredPublications.length);
     displayPublications(filteredPublications);
 }
 
@@ -346,41 +528,48 @@ async function loadPreprints() {
             return dateB - dateA;
         });
         
-        // Display all preprints and publications initially using filter functions
+        // Initialize with preprints view
+        currentView = 'preprints';
+        
+        // Display initial view (preprints)
         filterPreprints();
-        filterPublications();
         
-        // Create filter buttons for active members
-        createFilterButtons('preprints-filters', 'preprints');
-        createFilterButtons('publications-filters', 'publications');
+        // Set up unified filters for the initial view
+        updateFiltersForView();
         
-        // Create year range sliders
-        createYearSlider('preprints-year-slider', 'preprints');
-        createYearSlider('publications-year-slider', 'publications');
-        
-        // Add search event listener for preprints
-        const preprintsSearchInput = document.getElementById('preprints-search');
-        if (preprintsSearchInput) {
-            preprintsSearchInput.addEventListener('input', filterPreprints);
+        // Add search event listener for unified search input
+        const searchInput = document.getElementById('publications-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                if (currentView === 'preprints') {
+                    filterPreprints();
+                } else {
+                    filterPublications();
+                }
+            });
         }
         
-        // Add search event listener for publications
-        const publicationsSearchInput = document.getElementById('publications-search');
-        if (publicationsSearchInput) {
-            publicationsSearchInput.addEventListener('input', filterPublications);
-        }
+        // Set up toggle button listeners
+        document.querySelectorAll('.toggle-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const view = this.dataset.view;
+                switchView(view);
+            });
+        });
         
     } catch (error) {
         console.error('Error loading preprints:', error);
-        const container = document.getElementById('preprints-container');
-        container.innerHTML = '<p>Error loading preprints database. Please try again later.</p>';
+        const container = document.getElementById('publications-container');
+        if (container) {
+            container.innerHTML = '<p>Error loading publications database. Please try again later.</p>';
+        }
     }
 }
 
 // Function to display preprints
 function displayPreprints(preprints) {
-    // Generate HTML for preprints
-    const container = document.getElementById('preprints-container');
+    // Generate HTML for preprints - use unified container
+    const container = document.getElementById('publications-container');
     
     if (preprints.length === 0) {
         container.innerHTML = '<p>No preprints match your search.</p>';
@@ -973,36 +1162,29 @@ function downloadBibTeX(data, filename, isPreprint = false) {
 
 // Setup download button event listeners
 function setupDownloadButtons() {
-    const downloadPreprints = document.getElementById('download-preprints-json');
-    const downloadPublications = document.getElementById('download-publications-json');
-    const downloadPreprintsBib = document.getElementById('download-preprints-bib');
-    const downloadPublicationsBib = document.getElementById('download-publications-bib');
+    const downloadJson = document.getElementById('download-publications-json');
+    const downloadBib = document.getElementById('download-publications-bib');
     
-    if (downloadPreprints) {
-        downloadPreprints.addEventListener('click', function() {
+    if (downloadJson) {
+        downloadJson.addEventListener('click', function() {
             const timestamp = new Date().toISOString().split('T')[0];
-            downloadJSON(filteredPreprints, `qudyma_preprints_${timestamp}.json`);
+            const data = currentView === 'preprints' ? filteredPreprints : filteredPublications;
+            const filename = currentView === 'preprints' ? 
+                `qudyma_preprints_${timestamp}.json` : 
+                `qudyma_publications_${timestamp}.json`;
+            downloadJSON(data, filename);
         });
     }
     
-    if (downloadPublications) {
-        downloadPublications.addEventListener('click', function() {
+    if (downloadBib) {
+        downloadBib.addEventListener('click', function() {
             const timestamp = new Date().toISOString().split('T')[0];
-            downloadJSON(filteredPublications, `qudyma_publications_${timestamp}.json`);
-        });
-    }
-    
-    if (downloadPreprintsBib) {
-        downloadPreprintsBib.addEventListener('click', function() {
-            const timestamp = new Date().toISOString().split('T')[0];
-            downloadBibTeX(filteredPreprints, `qudyma_preprints_${timestamp}.bib`, true);
-        });
-    }
-    
-    if (downloadPublicationsBib) {
-        downloadPublicationsBib.addEventListener('click', function() {
-            const timestamp = new Date().toISOString().split('T')[0];
-            downloadBibTeX(filteredPublications, `qudyma_publications_${timestamp}.bib`, false);
+            const data = currentView === 'preprints' ? filteredPreprints : filteredPublications;
+            const filename = currentView === 'preprints' ? 
+                `qudyma_preprints_${timestamp}.bib` : 
+                `qudyma_publications_${timestamp}.bib`;
+            const isPreprint = currentView === 'preprints';
+            downloadBibTeX(data, filename, isPreprint);
         });
     }
 }
