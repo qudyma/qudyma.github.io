@@ -9,8 +9,9 @@ let qudymaAuthorsById = {};
 let activeMembers = [];
 let canonicalNameToId = {}; // map canonical author name -> author id from basics.json
 let selectedFilters = new Set(); // Single filter set shared across both views
-let yearRange = { min: 2020, max: new Date().getFullYear() }; // Single year range shared across both views
-let dynamicMinYear = 2020; // Will be calculated from data
+let yearRange = { min: 2020, max: new Date().getFullYear() }; // Single year range shared across both views - defaults to 2020
+let dynamicMinYear = 2020; // Will be calculated from data (allows going earlier if user changes it)
+let absoluteMinYear = 2020; // Absolute minimum available in database (for validation)
 let currentView = 'preprints'; // Track current view: 'preprints' or 'publications'
 
 // Helper function to normalize text by removing accents and diacritics
@@ -536,10 +537,10 @@ async function loadPreprints() {
             .filter(year => year !== null);
         
         if (years.length > 0) {
-            dynamicMinYear = Math.min(...years);
-            console.log('Dynamic min year from database:', dynamicMinYear);
-            // Update the default year range to use the dynamic minimum
-            yearRange.min = dynamicMinYear;
+            absoluteMinYear = Math.min(...years);
+            console.log('Absolute min year from database:', absoluteMinYear);
+            // Keep dynamicMinYear for input validation - allows going to absoluteMinYear
+            dynamicMinYear = absoluteMinYear;
         }
         
         // Filter for preprints (entries without journal_ref but with arxiv_url)
