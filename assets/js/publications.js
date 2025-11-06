@@ -3,6 +3,240 @@ let allPreprints = [];
 let allPublications = [];
 let qudymaAuthorsMap = {};
 let qudymaAuthorsUrls = {};
+let activeMembers = [];
+let selectedPreprintFilters = new Set();
+let selectedPublicationFilters = new Set();
+let preprintsYearRange = { min: 2020, max: new Date().getFullYear() };
+let publicationsYearRange = { min: 2020, max: new Date().getFullYear() };
+
+// Helper function to normalize text by removing accents and diacritics
+function normalizeText(text) {
+    return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+// Function to create filter buttons for active members
+function createFilterButtons(containerId, section) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    container.innerHTML = ''; // Clear existing
+    
+    activeMembers.forEach(memberName => {
+        const button = document.createElement('span');
+        button.className = 'author-filter';
+        // Display as initials + surname
+        button.textContent = formatAuthorAsInitials(memberName);
+        button.dataset.author = memberName;
+        
+        button.addEventListener('click', function() {
+            const filterSet = section === 'preprints' ? selectedPreprintFilters : selectedPublicationFilters;
+            
+            if (this.classList.contains('active')) {
+                this.classList.remove('active');
+                filterSet.delete(memberName);
+            } else {
+                this.classList.add('active');
+                filterSet.add(memberName);
+            }
+            
+            // Trigger search update
+            if (section === 'preprints') {
+                filterPreprints();
+            } else {
+                filterPublications();
+            }
+        });
+        
+        container.appendChild(button);
+    });
+}
+
+// Function to create year range slider
+function createYearSlider(containerId, section) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const currentYear = new Date().getFullYear();
+    const minYear = 2020;
+    const yearRange = section === 'preprints' ? preprintsYearRange : publicationsYearRange;
+    
+    container.innerHTML = `
+        <div class="year-slider-container">
+            <div class="year-range-inputs">
+                <span class="year-slider-label">Year:</span>
+                <input type="number" id="${section}-year-min" class="year-input" min="${minYear}" max="${currentYear}" value="${yearRange.min}">
+                <span class="year-separator">–</span>
+                <input type="number" id="${section}-year-max" class="year-input" min="${minYear}" max="${currentYear}" value="${yearRange.max}">
+            </div>
+        </div>
+    `;
+    
+    // Add event listeners for inputs
+    const minInput = document.getElementById(`${section}-year-min`);
+    const maxInput = document.getElementById(`${section}-year-max`);
+    
+    minInput.addEventListener('input', function() {
+        let minValue = parseInt(this.value);
+        let maxValue = parseInt(maxInput.value);
+        
+        // Validate input
+        if (isNaN(minValue) || minValue < minYear) {
+            minValue = minYear;
+            this.value = minValue;
+        }
+        if (minValue > currentYear) {
+            minValue = currentYear;
+            this.value = minValue;
+        }
+        
+        // Ensure min doesn't exceed max
+        if (minValue > maxValue) {
+            minValue = maxValue;
+            this.value = minValue;
+        }
+        
+        yearRange.min = minValue;
+        
+        // Trigger filter update
+        if (section === 'preprints') {
+            filterPreprints();
+        } else {
+            filterPublications();
+        }
+    });
+    
+    maxInput.addEventListener('input', function() {
+        let maxValue = parseInt(this.value);
+        let minValue = parseInt(minInput.value);
+        
+        // Validate input
+        if (isNaN(maxValue) || maxValue < minYear) {
+            maxValue = minYear;
+            this.value = maxValue;
+        }
+        if (maxValue > currentYear) {
+            maxValue = currentYear;
+            this.value = maxValue;
+        }
+        
+        // Ensure max doesn't go below min
+        if (maxValue < minValue) {
+            maxValue = minValue;
+            this.value = maxValue;
+        }
+        
+        yearRange.max = maxValue;
+        
+        // Trigger filter update
+        if (section === 'preprints') {
+            filterPreprints();
+        } else {
+            filterPublications();
+        }
+    });
+}
+
+// Function to filter preprints based on search and active filters
+function filterPreprints() {
+    const searchInput = document.getElementById('preprints-search');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    let filteredPreprints = allPreprints;
+    
+    // Apply search terms
+    if (searchTerm !== '') {
+        const searchTerms = searchTerm.split(/[,\s]+/)
+            .filter(term => term.trim() !== '')
+            .map(term => normalizeText(term));
+        
+        filteredPreprints = filteredPreprints.filter(pub => {
+            const searchableText = normalizeText(JSON.stringify(pub).toLowerCase());
+            return searchTerms.every(term => searchableText.includes(term));
+        });
+    }
+    
+    // Apply author filters
+    if (selectedPreprintFilters.size > 0) {
+        filteredPreprints = filteredPreprints.filter(pub => {
+            const authorsList = pub.authors.toLowerCase();
+            const normalizedAuthors = normalizeText(authorsList);
+            // Check if ALL selected authors are in this publication (AND logic)
+            return Array.from(selectedPreprintFilters).every(selectedAuthor => {
+                const normalizedAuthor = normalizeText(selectedAuthor.toLowerCase());
+                return normalizedAuthors.includes(normalizedAuthor);
+            });
+        });
+    }
+    
+    // Apply year range filter
+    filteredPreprints = filteredPreprints.filter(pub => {
+        const year = getPublicationYear(pub);
+        if (!year) return true; // Include if no year available
+        const yearNum = parseInt(year);
+        return yearNum >= preprintsYearRange.min && yearNum <= preprintsYearRange.max;
+    });
+    
+    displayPreprints(filteredPreprints);
+}
+
+// Function to filter publications based on search and active filters
+function filterPublications() {
+    const searchInput = document.getElementById('publications-search');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    let filteredPublications = allPublications;
+    
+    // Apply search terms
+    if (searchTerm !== '') {
+        const searchTerms = searchTerm.split(/[,\s]+/)
+            .filter(term => term.trim() !== '')
+            .map(term => normalizeText(term));
+        
+        filteredPublications = filteredPublications.filter(pub => {
+            const searchableText = normalizeText(JSON.stringify(pub).toLowerCase());
+            return searchTerms.every(term => searchableText.includes(term));
+        });
+    }
+    
+    // Apply author filters
+    if (selectedPublicationFilters.size > 0) {
+        filteredPublications = filteredPublications.filter(pub => {
+            const authorsList = pub.authors.toLowerCase();
+            const normalizedAuthors = normalizeText(authorsList);
+            // Check if ALL selected authors are in this publication (AND logic)
+            return Array.from(selectedPublicationFilters).every(selectedAuthor => {
+                const normalizedAuthor = normalizeText(selectedAuthor.toLowerCase());
+                return normalizedAuthors.includes(normalizedAuthor);
+            });
+        });
+    }
+    
+    // Apply year range filter
+    filteredPublications = filteredPublications.filter(pub => {
+        const year = extractPublicationYear(pub);
+        if (!year) return true; // Include if no year available
+        const yearNum = parseInt(year);
+        return yearNum >= publicationsYearRange.min && yearNum <= publicationsYearRange.max;
+    });
+    
+    displayPublications(filteredPublications);
+}
+
+// Helper function to format author name as "Initials. Surname"
+function formatAuthorAsInitials(fullName) {
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length === 0) return fullName;
+    
+    // Last part is the surname
+    const surname = parts[parts.length - 1];
+    
+    // Everything else becomes initials
+    const initials = parts.slice(0, -1).map(part => {
+        // Get first character of each name part
+        return part.charAt(0).toUpperCase() + '.';
+    }).join(' ');
+    
+    // Return "Initials. Surname" or just "Surname" if no initials
+    return initials ? `${initials} ${surname}` : surname;
+}
 
 // Load and display preprints (publications without journal_ref)
 async function loadPreprints() {
@@ -17,18 +251,23 @@ async function loadPreprints() {
         
         const configData = await configResponse.json();
         
-        // Extract QUDYMA author names and their variants
+        // Extract QUDYMA author names and their variants, and identify active members
         Object.values(configData).forEach(member => {
             if (member.name) {
-                qudymaAuthorsMap[member.name.toLowerCase()] = true;
+                qudymaAuthorsMap[member.name.toLowerCase()] = member.name; // Store canonical name
                 if (member.url) {
                     qudymaAuthorsUrls[member.name.toLowerCase()] = member.url;
                 }
                 
-                // Also add name variants
+                // Check if member is active (has date_in and date_out is null)
+                if (member.date_in && !member.date_out) {
+                    activeMembers.push(member.name);
+                }
+                
+                // Also add name variants, but map them to the canonical name
                 if (member.name_variants) {
                     member.name_variants.forEach(variant => {
-                        qudymaAuthorsMap[variant.toLowerCase()] = true;
+                        qudymaAuthorsMap[variant.toLowerCase()] = member.name; // Map variant to canonical name
                         if (member.url) {
                             qudymaAuthorsUrls[variant.toLowerCase()] = member.url;
                         }
@@ -36,6 +275,8 @@ async function loadPreprints() {
                 }
             }
         });
+        
+        // Keep the order from basics.json (don't sort)
         
         // Now fetch the publications database
         const dbUrl = 'https://raw.githubusercontent.com/qudyma/qudyma_db/main/data/publications.json';
@@ -80,48 +321,24 @@ async function loadPreprints() {
         displayPreprints(allPreprints);
         displayPublications(allPublications);
         
+        // Create filter buttons for active members
+        createFilterButtons('preprints-filters', 'preprints');
+        createFilterButtons('publications-filters', 'publications');
+        
+        // Create year range sliders
+        createYearSlider('preprints-year-slider', 'preprints');
+        createYearSlider('publications-year-slider', 'publications');
+        
         // Add search event listener for preprints
         const preprintsSearchInput = document.getElementById('preprints-search');
         if (preprintsSearchInput) {
-            preprintsSearchInput.addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                let filteredPreprints;
-                
-                if (searchTerm === '') {
-                    // Show all preprints if search is empty
-                    filteredPreprints = allPreprints;
-                } else {
-                    // Filter preprints by search term across all fields
-                    filteredPreprints = allPreprints.filter(pub => {
-                        const searchableText = JSON.stringify(pub).toLowerCase();
-                        return searchableText.includes(searchTerm);
-                    });
-                }
-                
-                displayPreprints(filteredPreprints);
-            });
+            preprintsSearchInput.addEventListener('input', filterPreprints);
         }
         
         // Add search event listener for publications
         const publicationsSearchInput = document.getElementById('publications-search');
         if (publicationsSearchInput) {
-            publicationsSearchInput.addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                let filteredPublications;
-                
-                if (searchTerm === '') {
-                    // Show all publications if search is empty
-                    filteredPublications = allPublications;
-                } else {
-                    // Filter publications by search term across all fields
-                    filteredPublications = allPublications.filter(pub => {
-                        const searchableText = JSON.stringify(pub).toLowerCase();
-                        return searchableText.includes(searchTerm);
-                    });
-                }
-                
-                displayPublications(filteredPublications);
-            });
+            publicationsSearchInput.addEventListener('input', filterPublications);
         }
         
     } catch (error) {
@@ -149,21 +366,23 @@ function displayPreprints(preprints) {
         // Format authors with QUDYMA authors underlined and linked
         const authorsFormatted = authorsList.split(', ').map(author => {
             const authorLower = author.toLowerCase().trim();
-            const isQudymaAuthor = qudymaAuthorsMap[authorLower];
+            const canonicalName = qudymaAuthorsMap[authorLower];
             
-            if (isQudymaAuthor) {
+            if (canonicalName) {
+                // This is a QUDYMA author - use canonical name
                 const url = qudymaAuthorsUrls[authorLower];
                 if (url) {
                     // QUDYMA author with URL
-                    return `<u><a href="${url}" style="color: inherit; text-decoration: none !important; border-bottom: none !important;">${author}</a></u>`;
+                    return `<u><a href="${url}" style="color: inherit; text-decoration: none !important; border-bottom: none !important;">${canonicalName}</a></u>`;
                 } else {
                     // QUDYMA author without URL, just underline - no link
-                    return `<u>${author}</u>`;
+                    return `<u>${canonicalName}</u>`;
                 }
             } else {
-                // Non-QUDYMA author - link to arXiv search
+                // Non-QUDYMA author - format as initials and link to arXiv search
+                const formattedAuthor = formatAuthorAsInitials(author);
                 const arxivUrl = `https://arxiv.org/search/?query=${encodeURIComponent(author)}&searchtype=all&abstracts=show&order=-announced_date_first&size=50`;
-                return `<a href="${arxivUrl}" style="color: inherit; text-decoration: none !important; border-bottom: none !important;">${author}</a>`;
+                return `<a href="${arxivUrl}" style="color: inherit; text-decoration: none !important; border-bottom: none !important;">${formattedAuthor}</a>`;
             }
         }).join(', ');
         
@@ -251,21 +470,23 @@ function displayPublications(publications) {
         // Format authors with QUDYMA authors underlined and linked
         const authorsFormatted = authorsList.split(', ').map(author => {
             const authorLower = author.toLowerCase().trim();
-            const isQudymaAuthor = qudymaAuthorsMap[authorLower];
+            const canonicalName = qudymaAuthorsMap[authorLower];
             
-            if (isQudymaAuthor) {
+            if (canonicalName) {
+                // This is a QUDYMA author - use canonical name
                 const url = qudymaAuthorsUrls[authorLower];
                 if (url) {
                     // QUDYMA author with URL
-                    return `<u><a href="${url}" style="color: inherit; text-decoration: none !important; border-bottom: none !important;">${author}</a></u>`;
+                    return `<u><a href="${url}" style="color: inherit; text-decoration: none !important; border-bottom: none !important;">${canonicalName}</a></u>`;
                 } else {
                     // QUDYMA author without URL, just underline - no link
-                    return `<u>${author}</u>`;
+                    return `<u>${canonicalName}</u>`;
                 }
             } else {
-                // Non-QUDYMA author - link to arXiv search
+                // Non-QUDYMA author - format as initials and link to arXiv search
+                const formattedAuthor = formatAuthorAsInitials(author);
                 const arxivUrl = `https://arxiv.org/search/?query=${encodeURIComponent(author)}&searchtype=all&abstracts=show&order=-announced_date_first&size=50`;
-                return `<a href="${arxivUrl}" style="color: inherit; text-decoration: none !important; border-bottom: none !important;">${author}</a>`;
+                return `<a href="${arxivUrl}" style="color: inherit; text-decoration: none !important; border-bottom: none !important;">${formattedAuthor}</a>`;
             }
         }).join(', ');
         

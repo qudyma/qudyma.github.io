@@ -106,6 +106,73 @@
 				border-color: #0066cc;
 				box-shadow: 0 0 5px rgba(0, 102, 204, 0.3);
 			}
+
+			.author-filter {
+				display: inline-block;
+				padding: 8px 15px;
+				margin: 0;
+				border: 1px solid #ddd;
+				border-radius: 5px;
+				cursor: pointer;
+				font-size: 0.95em;
+				transition: all 0.2s ease;
+				box-sizing: border-box;
+				flex: 1 1 auto;
+			}
+
+			.author-filter:hover {
+				background-color: #9f9a9a;
+				border-color: #0066cc;
+				box-shadow: 0 0 5px rgba(0, 102, 204, 0.3);
+			}
+
+			.author-filter.active {
+				background-color: #0066cc;
+				color: white;
+				border-color: #0066cc;
+			}
+
+			.author-filter.active:hover {
+				background-color: #0052a3;
+			}
+
+			.year-slider-container {
+				display: inline-block;
+				padding: 7px 15px 7px;
+				margin: 0;
+				border: 1px solid #ddd;
+				border-radius: 5px;
+				cursor: pointer;
+				font-size: 0.95em;
+				transition: all 0.2s ease;
+				box-sizing: border-box;
+				flex: 0 0 auto;
+			}
+
+			.year-slider-label {
+				font-size: 0.95em;
+				margin-right: 5px;
+			}
+
+			.year-range-inputs {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+
+			.year-input {
+				width: 75px;
+				border: 1px solid #ddd;
+				border-radius: 3px;
+				text-align: center;
+				font-size: 0.95em;
+				background-color: #555;
+				box-sizing: border-box;
+			}
+
+			.year-range-slider {
+				display: none;
+			}
 		</style>
 	</head>
 	<body class="is-preload">
@@ -146,12 +213,20 @@
 								<div class="inner">
                                     <h2 class="major">Preprints</h2>
 									<input type="text" id="preprints-search" placeholder="Search through the latest arXiv submissions from our members by title, authors, keywords...">
+									<div id="preprints-filters-container" style="margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 5px;">
+										<div id="preprints-filters" style="display: contents;"></div>
+										<div id="preprints-year-slider" style="display: contents;"></div>
+									</div>
 									<div id="preprints-scroll-wrapper">
 										<div id="preprints-container"></div>
 									</div>
 									<br>
 									<h2 class="major">Publication library</h2>
 									<input type="text" id="publications-search" placeholder="Search through the publication history of our members by title, authors, keywords...">
+									<div id="publications-filters-container" style="margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 5px;">
+										<div id="publications-filters" style="display: contents;"></div>
+										<div id="publications-year-slider" style="display: contents;"></div>
+									</div>
 									<div id="publications-scroll-wrapper">
 										<div id="publications-container"></div>
 									</div>
