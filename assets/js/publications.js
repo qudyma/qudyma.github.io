@@ -10,6 +10,7 @@ let activeMembers = [];
 let canonicalNameToId = {}; // map canonical author name -> author id from basics.json
 let selectedFilters = new Set(); // Single filter set shared across both views
 let yearRange = { min: 2020, max: new Date().getFullYear() }; // Single year range shared across both views
+let dynamicMinYear = 2020; // Will be calculated from data
 let currentView = 'preprints'; // Track current view: 'preprints' or 'publications'
 
 // Helper function to normalize text by removing accents and diacritics
@@ -108,7 +109,7 @@ function updateFiltersForView() {
     
     // Recreate year slider
     const currentYear = new Date().getFullYear();
-    const minYear = 2020;
+    const minYear = dynamicMinYear;
     
     yearSliderContainer.innerHTML = `
         <div class="year-slider-container">
@@ -241,7 +242,7 @@ function createYearSlider(containerId, section) {
     if (!container) return;
     
     const currentYear = new Date().getFullYear();
-    const minYear = 2020;
+    const minYear = dynamicMinYear;
     const yearRange = section === 'preprints' ? preprintsYearRange : publicationsYearRange;
     
     container.innerHTML = `
@@ -523,6 +524,23 @@ async function loadPreprints() {
         console.log('Entries with journal_ref:', publications.filter(p => p.journal_ref).length);
         console.log('Entries with arxiv_url AND NO journal_ref:', publications.filter(p => p.arxiv_url && !p.journal_ref).length);
         console.log('Entries with arxiv_url AND journal_ref:', publications.filter(p => p.arxiv_url && p.journal_ref).length);
+        
+        // Calculate minimum year from all publications
+        const years = publications
+            .map(pub => {
+                if (pub.published) {
+                    return parseInt(pub.published.substring(0, 4));
+                }
+                return null;
+            })
+            .filter(year => year !== null);
+        
+        if (years.length > 0) {
+            dynamicMinYear = Math.min(...years);
+            console.log('Dynamic min year from database:', dynamicMinYear);
+            // Update the default year range to use the dynamic minimum
+            yearRange.min = dynamicMinYear;
+        }
         
         // Filter for preprints (entries without journal_ref but with arxiv_url)
         allPreprints = publications.filter(pub => !pub.journal_ref && pub.arxiv_url);
