@@ -75,7 +75,8 @@ function createYearSlider(containerId, section) {
     const minInput = document.getElementById(`${section}-year-min`);
     const maxInput = document.getElementById(`${section}-year-max`);
     
-    minInput.addEventListener('input', function() {
+    // Validate and update on change (when user finishes typing or uses arrows)
+    minInput.addEventListener('change', function() {
         let minValue = parseInt(this.value);
         let maxValue = parseInt(maxInput.value);
         
@@ -105,7 +106,20 @@ function createYearSlider(containerId, section) {
         }
     });
     
-    maxInput.addEventListener('input', function() {
+    // Also validate on blur (when clicking away)
+    minInput.addEventListener('blur', function() {
+        // Trigger change event to validate
+        this.dispatchEvent(new Event('change'));
+    });
+    
+    // Also validate on Enter key
+    minInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            this.blur();
+        }
+    });
+    
+    maxInput.addEventListener('change', function() {
         let maxValue = parseInt(this.value);
         let minValue = parseInt(minInput.value);
         
@@ -132,6 +146,19 @@ function createYearSlider(containerId, section) {
             filterPreprints();
         } else {
             filterPublications();
+        }
+    });
+    
+    // Also validate on blur (when clicking away)
+    maxInput.addEventListener('blur', function() {
+        // Trigger change event to validate
+        this.dispatchEvent(new Event('change'));
+    });
+    
+    // Also validate on Enter key
+    maxInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            this.blur();
         }
     });
 }
@@ -169,7 +196,7 @@ function filterPreprints() {
     
     // Apply year range filter
     filteredPreprints = filteredPreprints.filter(pub => {
-        const year = getPublicationYear(pub);
+        const year = extractPublicationYear(pub);
         if (!year) return true; // Include if no year available
         const yearNum = parseInt(year);
         return yearNum >= preprintsYearRange.min && yearNum <= preprintsYearRange.max;
