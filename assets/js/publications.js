@@ -1,6 +1,8 @@
 // Global variables to store data
 let allPreprints = [];
 let allPublications = [];
+let filteredPreprints = [];
+let filteredPublications = [];
 let qudymaAuthorsMap = {};
 let qudymaAuthorsUrls = {};
 let activeMembers = [];
@@ -167,7 +169,7 @@ function createYearSlider(containerId, section) {
 function filterPreprints() {
     const searchInput = document.getElementById('preprints-search');
     const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-    let filteredPreprints = allPreprints;
+    filteredPreprints = allPreprints;
     
     // Apply search terms
     if (searchTerm !== '') {
@@ -209,7 +211,7 @@ function filterPreprints() {
 function filterPublications() {
     const searchInput = document.getElementById('publications-search');
     const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-    let filteredPublications = allPublications;
+    filteredPublications = allPublications;
     
     // Apply search terms
     if (searchTerm !== '') {
@@ -688,6 +690,42 @@ function extractPublicationYear(pub) {
     return '';
 }
 
+// Function to download JSON data
+function downloadJSON(data, filename) {
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+// Setup download button event listeners
+function setupDownloadButtons() {
+    const downloadPreprints = document.getElementById('download-preprints-json');
+    const downloadPublications = document.getElementById('download-publications-json');
+    
+    if (downloadPreprints) {
+        downloadPreprints.addEventListener('click', function() {
+            const timestamp = new Date().toISOString().split('T')[0];
+            downloadJSON(filteredPreprints, `qudyma_preprints_${timestamp}.json`);
+        });
+    }
+    
+    if (downloadPublications) {
+        downloadPublications.addEventListener('click', function() {
+            const timestamp = new Date().toISOString().split('T')[0];
+            downloadJSON(filteredPublications, `qudyma_publications_${timestamp}.json`);
+        });
+    }
+}
 
 // Load preprints when the page is ready
-document.addEventListener('DOMContentLoaded', loadPreprints);
+document.addEventListener('DOMContentLoaded', function() {
+    loadPreprints();
+    setupDownloadButtons();
+});

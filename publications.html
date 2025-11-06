@@ -171,6 +171,25 @@
 			.year-range-slider {
 				display: none;
 			}
+
+			.download-json-btn {
+				padding: 10px 15px;
+				color: inherit;
+				border: 1px solid #ddd;
+				border-radius: 5px;
+				cursor: pointer;
+				font-size: 1em;
+				transition: all 0.2s ease;
+				box-sizing: border-box;
+				background-color: transparent;
+				line-height: 1;
+				vertical-align: middle;
+			}
+
+			.download-json-btn:hover {
+				border-color: #0066cc;
+				box-shadow: 0 0 5px rgba(0, 102, 204, 0.3);
+			}
 		</style>
 	</head>
 	<body class="is-preload">
@@ -218,6 +237,9 @@
 									<div id="preprints-scroll-wrapper">
 										<div id="preprints-container"></div>
 									</div>
+									<div style="text-align: right; margin-top: 10px;">
+										<button id="download-preprints-json" class="download-json-btn">Download .json</button>
+									</div>
 									<br>
 									<h2 class="major">Publication library</h2>
 									<input type="text" id="publications-search" placeholder="Search through the publication history of our members by title, authors, keywords...">
@@ -227,6 +249,9 @@
 									</div>
 									<div id="publications-scroll-wrapper">
 										<div id="publications-container"></div>
+									</div>
+									<div style="text-align: right; margin-top: 10px;">
+										<button id="download-publications-json" class="download-json-btn">Download .json</button>
 									</div>
 
 									<!-- <h2 class="major">Highlighted works</h2>
