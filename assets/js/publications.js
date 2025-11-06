@@ -346,9 +346,9 @@ async function loadPreprints() {
             return dateB - dateA;
         });
         
-        // Display all preprints and publications initially
-        displayPreprints(allPreprints);
-        displayPublications(allPublications);
+        // Display all preprints and publications initially using filter functions
+        filterPreprints();
+        filterPublications();
         
         // Create filter buttons for active members
         createFilterButtons('preprints-filters', 'preprints');
