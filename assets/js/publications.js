@@ -704,10 +704,279 @@ function downloadJSON(data, filename) {
     URL.revokeObjectURL(url);
 }
 
+// Function to convert special characters to LaTeX format
+function toLatex(text) {
+    if (!text) return text;
+    
+    const replacements = {
+        // Accented vowels - acute
+        'á': "\\'a", 'é': "\\'e", 'í': "\\'i", 'ó': "\\'o", 'ú': "\\'u",
+        'Á': "\\'A", 'É': "\\'E", 'Í': "\\'I", 'Ó': "\\'O", 'Ú': "\\'U",
+        'ý': "\\'y", 'Ý': "\\'Y",
+        
+        // Accented vowels - grave
+        'à': "\\`a", 'è': "\\`e", 'ì': "\\`i", 'ò': "\\`o", 'ù': "\\`u",
+        'À': "\\`A", 'È': "\\`E", 'Ì': "\\`I", 'Ò': "\\`O", 'Ù': "\\`U",
+        
+        // Accented vowels - circumflex
+        'â': "\\^a", 'ê': "\\^e", 'î': "\\^i", 'ô': "\\^o", 'û': "\\^u",
+        'Â': "\\^A", 'Ê': "\\^E", 'Î': "\\^I", 'Ô': "\\^O", 'Û': "\\^U",
+        
+        // Accented vowels - umlaut/diaeresis
+        'ä': '\\"a', 'ë': '\\"e', 'ï': '\\"i', 'ö': '\\"o', 'ü': '\\"u',
+        'Ä': '\\"A', 'Ë': '\\"E', 'Ï': '\\"I', 'Ö': '\\"O', 'Ü': '\\"U',
+        'ÿ': '\\"y', 'Ÿ': '\\"Y',
+        
+        // Accented vowels - tilde
+        'ã': '\\~a', 'õ': '\\~o', 'ñ': '\\~n',
+        'Ã': '\\~A', 'Õ': '\\~O', 'Ñ': '\\~N',
+        
+        // Other diacritics
+        'ç': '\\c{c}', 'Ç': '\\c{C}',
+        'ø': '\\o', 'Ø': '\\O',
+        'å': '\\aa', 'Å': '\\AA',
+        'æ': '\\ae', 'Æ': '\\AE',
+        'œ': '\\oe', 'Œ': '\\OE',
+        'ß': '\\ss',
+        'ł': '\\l', 'Ł': '\\L',
+        
+        // Slavic characters
+        'š': '\\v{s}', 'Š': '\\v{S}',
+        'č': '\\v{c}', 'Č': '\\v{C}',
+        'ž': '\\v{z}', 'Ž': '\\v{Z}',
+        'ř': '\\v{r}', 'Ř': '\\v{R}',
+        'ě': '\\v{e}', 'Ě': '\\v{E}',
+        'ů': '\\r{u}', 'Ů': '\\r{U}',
+        
+        // Polish characters
+        'ą': '\\k{a}', 'Ą': '\\k{A}',
+        'ę': '\\k{e}', 'Ę': '\\k{E}',
+        'ń': "\\'n", 'Ń': "\\'N",
+        'ś': "\\'s", 'Ś': "\\'S",
+        'ź': "\\'z", 'Ź': "\\'Z",
+        'ż': '\\.z', 'Ż': '\\.Z',
+        
+        // Hungarian characters
+        'ő': '\\H{o}', 'Ő': '\\H{O}',
+        'ű': '\\H{u}', 'Ű': '\\H{U}',
+        
+        // Special symbols
+        '°': '\\textdegree',
+        '€': '\\euro',
+        '£': '\\pounds',
+        '§': '\\S',
+        '¶': '\\P',
+        '†': '\\dag',
+        '‡': '\\ddag',
+        '©': '\\copyright',
+        '®': '\\textregistered',
+        '™': '\\texttrademark'
+    };
+    
+    let result = text;
+    for (const [char, latex] of Object.entries(replacements)) {
+        result = result.split(char).join(latex);
+    }
+    
+    return result;
+}
+
+// Function to convert publication to BibTeX format
+function pubToBibTeX(pub, isPreprint = false) {
+    // Determine entry type
+    let entryType = '@article';
+    if (isPreprint) {
+        entryType = '@misc';
+    } else if (pub.type && pub.type.toLowerCase() === 'book') {
+        entryType = '@book';
+    }
+    
+    // Generate citation key using DOI or arXiv ID
+    let citationKey = '';
+    if (pub.doi) {
+        // Use last part of DOI (e.g., "10.1103/PhysRevB.112.134520" -> "PhysRevB.112.134520")
+        citationKey = pub.doi.replace('10.', '').replace(/\//g, '.');
+    } else if (pub.arxiv_id) {
+        // Use arXiv ID (e.g., "2510.00921")
+        citationKey = pub.arxiv_id.replace('.', '');
+    } else {
+        // Fallback to FirstAuthor:Year
+        const firstAuthor = pub.authors ? pub.authors.split(',')[0].trim().split(' ').pop() : 'Unknown';
+        const year = extractPublicationYear(pub) || new Date().getFullYear();
+        citationKey = `${firstAuthor}:${year}`;
+    }
+    
+    let bibtex = `${entryType}{${citationKey},\n`;
+    
+    // Add title (convert special characters to LaTeX)
+    if (pub.title) {
+        bibtex += `  title = {${toLatex(pub.title)}},\n`;
+    }
+    
+    // Add authors (convert special characters to LaTeX)
+    if (pub.authors) {
+        bibtex += `  author = {${toLatex(pub.authors)}},\n`;
+    }
+    
+    // Add year
+    const year = extractPublicationYear(pub);
+    if (year) {
+        bibtex += `  year = ${year},\n`;
+    }
+    
+    // Add month if available
+    if (pub.published) {
+        const date = new Date(pub.published);
+        const month = date.toLocaleString('en', { month: 'short' }).toLowerCase();
+        bibtex += `  month = ${month},\n`;
+    }
+    
+    if (isPreprint) {
+        // Preprint-specific fields (@misc)
+        if (pub.arxiv_id) {
+            bibtex += `  number = {arXiv:${pub.arxiv_id}},\n`;
+            bibtex += `  eprint = {${pub.arxiv_id}},\n`;
+            bibtex += `  primaryclass = {cond-mat},\n`;
+            bibtex += `  publisher = {arXiv},\n`;
+            bibtex += `  archiveprefix = {arXiv},\n`;
+        }
+        if (pub.doi) {
+            bibtex += `  doi = {${pub.doi}},\n`;
+        }
+        // Add URL for preprints (arxiv_url)
+        if (pub.arxiv_url) {
+            bibtex += `  url = {${pub.arxiv_url}},\n`;
+        }
+    } else {
+        // Publication-specific fields (@article or @book)
+        if (pub.journal_ref) {
+            // Parse journal reference to extract just the journal name (before volume number)
+            // Example: "Phys. Rev. B 112, 134520 (2025)" -> journal = "Phys. Rev. B"
+            const journalMatch = pub.journal_ref.match(/^(.+?)\s+\d+/);
+            if (journalMatch) {
+                bibtex += `  journal = {${toLatex(journalMatch[1].trim())}},\n`;
+            } else {
+                // If no volume found, try to get everything before comma
+                const journalMatch2 = pub.journal_ref.match(/^([^,]+)/);
+                if (journalMatch2) {
+                    bibtex += `  journal = {${toLatex(journalMatch2[1].trim())}},\n`;
+                }
+            }
+            
+            // Try to parse volume (digits after journal name)
+            const volumeMatch = pub.journal_ref.match(/\s+(\d+),/);
+            if (volumeMatch) {
+                bibtex += `  volume = {${volumeMatch[1]}},\n`;
+            }
+            
+            // Try to parse number/issue (if present)
+            const numberMatch = pub.journal_ref.match(/,\s*(\d+)\s*\(/);
+            if (numberMatch) {
+                bibtex += `  number = {${numberMatch[1]}},\n`;
+            }
+            
+            // Try to parse pages
+            const pagesMatch = pub.journal_ref.match(/,\s*(\d+)/);
+            if (pagesMatch) {
+                bibtex += `  pages = {${pagesMatch[1]}},\n`;
+            }
+        }
+        
+        // Add publisher for articles/books (convert special characters to LaTeX)
+        if (pub.publisher) {
+            bibtex += `  publisher = {${toLatex(pub.publisher)}},\n`;
+        }
+        
+        if (pub.doi) {
+            bibtex += `  doi = {${pub.doi}},\n`;
+        }
+        
+        // Add URL (journal_url)
+        if (pub.journal_url) {
+            bibtex += `  url = {${pub.journal_url}},\n`;
+        }
+        
+        if (pub.type && pub.type.toLowerCase() === 'book') {
+            // Book-specific fields
+            if (pub.edition) {
+                bibtex += `  edition = {${pub.edition}},\n`;
+            }
+            if (pub.isbn) {
+                bibtex += `  isbn = {${pub.isbn}},\n`;
+            }
+        }
+    }
+    
+    // Add summary as abstract (convert special characters to LaTeX)
+    if (pub.summary) {
+        const cleanAbstract = pub.summary.replace(/\n/g, ' ').replace(/\s+/g, ' ');
+        bibtex += `  abstract = {${toLatex(cleanAbstract)}},\n`;
+    }
+    
+    // Add urldate if available
+    if (pub.published) {
+        const date = new Date(pub.published);
+        const urldate = date.toISOString().split('T')[0];
+        bibtex += `  urldate = {${urldate}},\n`;
+    }
+    
+    // Add keywords if available (convert special characters to LaTeX)
+    if (pub.keywords) {
+        if (Array.isArray(pub.keywords)) {
+            bibtex += `  keywords = {${toLatex(pub.keywords.join(', '))}},\n`;
+        } else {
+            bibtex += `  keywords = {${toLatex(pub.keywords)}},\n`;
+        }
+    }
+    
+    // Add any coverage links as notes (convert special characters to LaTeX)
+    if (pub.coverage && Array.isArray(pub.coverage) && pub.coverage.length > 0) {
+        const coverageText = pub.coverage.map(c => `${toLatex(c.source)}: ${c.url}`).join('; ');
+        bibtex += `  note = {Featured in: ${coverageText}},\n`;
+    }
+    
+    // Add awards as additional note (convert special characters to LaTeX)
+    if (pub.awards && Array.isArray(pub.awards) && pub.awards.length > 0) {
+        const awardsText = pub.awards.map(a => `${toLatex(a.type)}: ${a.url}`).join('; ');
+        if (pub.coverage && pub.coverage.length > 0) {
+            // Append to existing note
+            bibtex = bibtex.slice(0, -3) + `; Awards: ${awardsText}},\n`;
+        } else {
+            bibtex += `  note = {Awards: ${awardsText}},\n`;
+        }
+    }
+    
+    // Remove trailing comma and close entry
+    bibtex = bibtex.slice(0, -2) + '\n}\n';
+    
+    return bibtex;
+}
+
+// Function to convert array of publications to BibTeX format
+function dataToBibTeX(data, isPreprint = false) {
+    return data.map(pub => pubToBibTeX(pub, isPreprint)).join('\n');
+}
+
+// Function to download BibTeX data
+function downloadBibTeX(data, filename, isPreprint = false) {
+    const bibStr = dataToBibTeX(data, isPreprint);
+    const blob = new Blob([bibStr], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
 // Setup download button event listeners
 function setupDownloadButtons() {
     const downloadPreprints = document.getElementById('download-preprints-json');
     const downloadPublications = document.getElementById('download-publications-json');
+    const downloadPreprintsBib = document.getElementById('download-preprints-bib');
+    const downloadPublicationsBib = document.getElementById('download-publications-bib');
     
     if (downloadPreprints) {
         downloadPreprints.addEventListener('click', function() {
@@ -720,6 +989,20 @@ function setupDownloadButtons() {
         downloadPublications.addEventListener('click', function() {
             const timestamp = new Date().toISOString().split('T')[0];
             downloadJSON(filteredPublications, `qudyma_publications_${timestamp}.json`);
+        });
+    }
+    
+    if (downloadPreprintsBib) {
+        downloadPreprintsBib.addEventListener('click', function() {
+            const timestamp = new Date().toISOString().split('T')[0];
+            downloadBibTeX(filteredPreprints, `qudyma_preprints_${timestamp}.bib`, true);
+        });
+    }
+    
+    if (downloadPublicationsBib) {
+        downloadPublicationsBib.addEventListener('click', function() {
+            const timestamp = new Date().toISOString().split('T')[0];
+            downloadBibTeX(filteredPublications, `qudyma_publications_${timestamp}.bib`, false);
         });
     }
 }
