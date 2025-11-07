@@ -236,7 +236,7 @@ function createMemberCard(memberId, member, categories) {
 
 /**
  * Categorize members into groups
- * @param {Object} membersData - All members data
+ * @param {Object} membersData - Members data keyed by ID
  * @returns {Object} Categorized members
  */
 function categorizeMembers(membersData) {
@@ -267,6 +267,44 @@ function categorizeMembers(membersData) {
     });
     
     return groups;
+}
+
+/**
+ * Sort members by category order, then date (earliest first), then id (lowest first)
+ * @param {Array} members - Array of members to sort
+ * @param {boolean} useDefenseDate - If true, prefer defense_date over date_in (fallback to date_in if defense_date doesn't exist)
+ * @returns {Array} Sorted members
+ */
+function sortMembers(members, useDefenseDate = false) {
+    return members.sort((a, b) => {
+        // First: sort by category (ascending)
+        const categoryA = parseInt(a.category) || 0;
+        const categoryB = parseInt(b.category) || 0;
+        if (categoryA !== categoryB) {
+            return categoryA - categoryB;
+        }
+        
+        // Second: sort by date (earliest to latest)
+        // For former members: use defense_date if available, otherwise date_in
+        // For others: use date_in
+        let dateA, dateB;
+        if (useDefenseDate) {
+            dateA = a.defense_date || a.date_in || '';
+            dateB = b.defense_date || b.date_in || '';
+        } else {
+            dateA = a.date_in || '';
+            dateB = b.date_in || '';
+        }
+        
+        if (dateA !== dateB) {
+            return dateA.localeCompare(dateB);
+        }
+        
+        // Third: sort by id (lowest to highest)
+        const idA = a.id || '';
+        const idB = b.id || '';
+        return idA.localeCompare(idB);
+    });
 }
 
 /**
@@ -311,6 +349,13 @@ async function init() {
         
         // Categorize members
         const groups = categorizeMembers(membersData);
+        
+        // Sort all groups by category, date, and id
+        // Former members use defense_date, others use date_in
+        sortMembers(groups.members, false);
+        sortMembers(groups.formerMembers, true);  // Use defense_date for former members
+        sortMembers(groups.visitors, false);
+        sortMembers(groups.formerVisitors, false);
         
         // Render each section
         renderSection('members-section', groups.members, categories, 'Active Members');

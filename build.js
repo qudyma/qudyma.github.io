@@ -30,7 +30,8 @@ function loadComponents() {
         menu: readFile(path.join(componentsDir, 'menu.html')),
         footer: readFile(path.join(componentsDir, 'footer.html')),
         publicationsStyles: readFile(path.join(componentsDir, 'publications-styles.html')),
-        membersStyles: readFile(path.join(componentsDir, 'members-styles.html'))
+        membersStyles: readFile(path.join(componentsDir, 'members-styles.html')),
+        contactsStyles: readFile(path.join(componentsDir, 'contacts-styles.html'))
     };
 }
 
@@ -92,6 +93,10 @@ function buildPage(pageName, components, template) {
         'publications': {
             headExtra: components.publicationsStyles,
             scriptsExtra: '<script src="assets/js/publications-bundle.js"></script>'
+        },
+        'contacts': {
+            headExtra: components.contactsStyles,
+            scriptsExtra: ''
         }
     };
     
@@ -111,9 +116,10 @@ function buildPage(pageName, components, template) {
         html = html.replace('{{MEMBERS_STYLES}}', components.membersStyles);
     }
     
-    // Add index-banner class to index page banner
+    // Add index-banner class to index page banner and body
     if (pageName === 'index') {
         html = html.replace('<section id="banner">', '<section id="banner" class="index-banner">');
+        html = html.replace('<body class="is-preload">', '<body class="is-preload index-page">');
     }
     
     // Write to root directory

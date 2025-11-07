@@ -4002,7 +4002,7 @@ input, select, textarea {
 
 /* Footer */
 
-	#footer .inner, #contact .inner {
+	#footer .inner {
 	 		/* reduced top padding so footer content sits closer to the top */
 	 		padding: 0 0 0 0 ;
 		display: -moz-flex;
@@ -4018,7 +4018,13 @@ input, select, textarea {
 		-ms-flex-wrap: wrap;
 		flex-wrap: wrap;
 		margin: 0 auto;
-		width: 55em;
+		width: 70em;
+		max-width: 100%;
+	}
+	
+	/* Match footer width to index banner (56em) on index page */
+	body.index-page #footer .inner {
+		width: 56em;
 	}
 
  		#footer .inner > *, #contact .inner > * {
@@ -4086,7 +4092,7 @@ input, select, textarea {
 			padding-top: 2.5em;
 		}
 
-			#footer .inner, #contact .inner {
+			#footer .inner {
 				/* slightly reduced top padding on .inner for this breakpoint */
 				padding: 0.75em 1.5em 0.75em 1.5em ;
 				display: block;
@@ -4117,7 +4123,7 @@ input, select, textarea {
 			padding-top: 1.25em;
 		}
 
-			#footer .inner, #contact .inner {
+			#footer .inner {
 				/* reduced top padding on inner for small screens */
 				padding: 0.5em 1em 0.1em 1em ;
 			}
@@ -4149,7 +4155,7 @@ input, select, textarea {
 
 	@media screen and (max-width: 360px) {
 
-		#footer .inner, #contact .inner {
+		#footer .inner {
 			/* reduced top padding on extra-small screens */
 			padding: 0.5em 1rem 0.1em 1rem ;
 		}
@@ -4399,4 +4405,69 @@ ul.contact.three-col > li.person h3.minor {
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
+}
+
+/* Smooth content loading animations for all wrapper sections */
+#wrapper > section {
+	-moz-transition: opacity 0.75s ease, -moz-transform 0.75s ease;
+	-webkit-transition: opacity 0.75s ease, -webkit-transform 0.75s ease;
+	-ms-transition: opacity 0.75s ease, -ms-transform 0.75s ease;
+	transition: opacity 0.75s ease, transform 0.75s ease;
+	-moz-transform: translateY(0);
+	-webkit-transform: translateY(0);
+	-ms-transform: translateY(0);
+	transform: translateY(0);
+	opacity: 1;
+}
+
+/* Set transition delays for normal state (staggered appearance) */
+#wrapper > section:nth-child(1) {
+	-moz-transition-delay: 0.2s;
+	-webkit-transition-delay: 0.2s;
+	-ms-transition-delay: 0.2s;
+	transition-delay: 0.2s;
+}
+
+#wrapper > section:nth-child(2) {
+	-moz-transition-delay: 0.4s;
+	-webkit-transition-delay: 0.4s;
+	-ms-transition-delay: 0.4s;
+	transition-delay: 0.4s;
+}
+
+#wrapper > section:nth-child(3) {
+	-moz-transition-delay: 0.6s;
+	-webkit-transition-delay: 0.6s;
+	-ms-transition-delay: 0.6s;
+	transition-delay: 0.6s;
+}
+
+#wrapper > section:nth-child(4) {
+	-moz-transition-delay: 0.8s;
+	-webkit-transition-delay: 0.8s;
+	-ms-transition-delay: 0.8s;
+	transition-delay: 0.8s;
+}
+
+#wrapper > section:nth-child(5) {
+	-moz-transition-delay: 1s;
+	-webkit-transition-delay: 1s;
+	-ms-transition-delay: 1s;
+	transition-delay: 1s;
+}
+
+#wrapper > section:nth-child(6) {
+	-moz-transition-delay: 1.2s;
+	-webkit-transition-delay: 1.2s;
+	-ms-transition-delay: 1.2s;
+	transition-delay: 1.2s;
+}
+
+/* Initial preload state - hidden and translated down */
+body.is-preload #wrapper > section {
+	-moz-transform: translateY(1em);
+	-webkit-transform: translateY(1em);
+	-ms-transform: translateY(1em);
+	transform: translateY(1em);
+	opacity: 0;
 }
