@@ -43,8 +43,24 @@ function buildPage(pageName, components, template) {
     const pagesDir = path.join(SRC_DIR, 'pages');
     const pageContent = readFile(path.join(pagesDir, `${pageName}.html`));
     
-    // All pages now have banners, so all use the header with 'alt' class
-    const header = components.header;
+    // Page titles for header
+    const pageTitles = {
+        'members': 'Members',
+        'research': 'Research',
+        'software': 'Software',
+        'publications': 'Publications',
+        'opportunities': 'Opportunities',
+        'contacts': 'Contacts'
+    };
+    
+    // Modify header to include page title for non-index pages
+    let header = components.header;
+    if (pageName !== 'index' && pageTitles[pageName]) {
+        header = header.replace(
+            '<h1><a href="index.html"><img src="images/icons/QUDYMA_logo.png" alt="QUDYMA" class="header-logo">QUDYMA</a></h1>',
+            `<h1><a href="index.html"><img src="images/icons/QUDYMA_logo.png" alt="QUDYMA" class="header-logo">QUDYMA</a> | ${pageTitles[pageName]}</h1>`
+        );
+    }
     
     // Page-specific configurations
     const pageConfig = {
@@ -68,6 +84,11 @@ function buildPage(pageName, components, template) {
         .replace('{{FOOTER}}', components.footer)
         .replace('{{HEAD_EXTRA}}', config.headExtra)
         .replace('{{SCRIPTS_EXTRA}}', config.scriptsExtra);
+    
+    // Add index-banner class to index page banner
+    if (pageName === 'index') {
+        html = html.replace('<section id="banner">', '<section id="banner" class="index-banner">');
+    }
     
     // Write to root directory
     const outputPath = path.join(ROOT_DIR, `${pageName}.html`);
