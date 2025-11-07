@@ -43,6 +43,9 @@ function buildPage(pageName, components, template) {
     const pagesDir = path.join(SRC_DIR, 'pages');
     const pageContent = readFile(path.join(pagesDir, `${pageName}.html`));
     
+    // All pages now have banners, so all use the header with 'alt' class
+    const header = components.header;
+    
     // Page-specific configurations
     const pageConfig = {
         'index': {
@@ -59,7 +62,7 @@ function buildPage(pageName, components, template) {
     
     // Replace placeholders
     let html = template
-        .replace('{{HEADER}}', components.header)
+        .replace('{{HEADER}}', header)
         .replace('{{MENU}}', components.menu)
         .replace('{{CONTENT}}', pageContent)
         .replace('{{FOOTER}}', components.footer)
