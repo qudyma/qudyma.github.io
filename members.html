@@ -140,11 +140,22 @@
     /* Title stays at same position */
     #wrapper .features article h3.major {
         flex-shrink: 0;
+        margin-bottom: 0.1em;
     }
     
-    /* Content area grows to push social links to bottom */
+    /* Ensure description/title lines align to top and have consistent height */
     #wrapper .features article > p {
         margin-bottom: 0.5em;
+        min-height: 3.2em; /* Reserve space for two lines */
+        display: block;
+        line-height: 1.3;
+        overflow: hidden;
+    }
+
+    #wrapper .features article > p:first-of-type {
+        margin-top: 0;
+        margin-bottom: 0.6em;
+        padding-bottom: 0;
     }
     
     /* Social links paragraph stays at bottom */
@@ -207,6 +218,48 @@
     
     .email-modal-close:hover {
         color: #f56a6a;
+    }
+    
+    /* Member card bottom row: social icons left, publications button right */
+    .member-card-social-full {
+        width: 100%;
+        margin-top: 0.2em;
+        margin-bottom: 0.2em;
+        display: flex;
+        align-items: flex-start;
+        min-height: 2.2em; /* Reserve space for alignment */
+    }
+    .member-card-social-full p {
+        margin: 0;
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5em;
+        align-items: flex-start;
+        justify-content: flex-start;
+    }
+    .member-card-publications-row {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        align-items: flex-start;
+        min-height: 1.8em; /* Reserve space for alignment */
+        margin-bottom: 0.2em;
+    }
+    .member-publications-btn {
+        display: inline-block;
+        margin-left: 0.5em;
+        font-size: 0.95em;
+        font-weight: 500;
+        white-space: nowrap;
+        /* Remove default background, border, etc. to inherit from .special */
+        background: none;
+        border: none;
+        padding: 0;
+        color: inherit;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-family: Raleway, Helvetica, sans-serif;
     }
 </style>
 
@@ -387,11 +440,22 @@
     /* Title stays at same position */
     #wrapper .features article h3.major {
         flex-shrink: 0;
+        margin-bottom: 0.1em;
     }
     
-    /* Content area grows to push social links to bottom */
+    /* Ensure description/title lines align to top and have consistent height */
     #wrapper .features article > p {
         margin-bottom: 0.5em;
+        min-height: 3.2em; /* Reserve space for two lines */
+        display: block;
+        line-height: 1.3;
+        overflow: hidden;
+    }
+
+    #wrapper .features article > p:first-of-type {
+        margin-top: 0;
+        margin-bottom: 0.6em;
+        padding-bottom: 0;
     }
     
     /* Social links paragraph stays at bottom */
@@ -454,6 +518,48 @@
     
     .email-modal-close:hover {
         color: #f56a6a;
+    }
+    
+    /* Member card bottom row: social icons left, publications button right */
+    .member-card-social-full {
+        width: 100%;
+        margin-top: 0.2em;
+        margin-bottom: 0.2em;
+        display: flex;
+        align-items: flex-start;
+        min-height: 2.2em; /* Reserve space for alignment */
+    }
+    .member-card-social-full p {
+        margin: 0;
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5em;
+        align-items: flex-start;
+        justify-content: flex-start;
+    }
+    .member-card-publications-row {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        align-items: flex-start;
+        min-height: 1.8em; /* Reserve space for alignment */
+        margin-bottom: 0.2em;
+    }
+    .member-publications-btn {
+        display: inline-block;
+        margin-left: 0.5em;
+        font-size: 0.95em;
+        font-weight: 500;
+        white-space: nowrap;
+        /* Remove default background, border, etc. to inherit from .special */
+        background: none;
+        border: none;
+        padding: 0;
+        color: inherit;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-family: Raleway, Helvetica, sans-serif;
     }
 </style>
 

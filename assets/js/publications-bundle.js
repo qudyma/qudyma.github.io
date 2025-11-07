@@ -64,6 +64,9 @@
   var removeFilter = (filter) => {
     state.selectedFilters.delete(filter);
   };
+  var clearFilters = () => {
+    state.selectedFilters.clear();
+  };
   var getYearRange = () => state.yearRange;
   var setMinYear = (min) => {
     state.yearRange.min = min;
@@ -975,9 +978,49 @@
   async function init() {
     try {
       await loadAllData();
-      setCurrentView("preprints");
-      const filteredPreprints = filterPreprints();
-      displayPreprints(filteredPreprints);
+      const params = new URLSearchParams(window.location.search);
+      const viewParam = params.get("view");
+      const authorIdParam = params.get("authorId");
+      const authorNameParam = params.get("authorName");
+      let initialView = "preprints";
+      if (viewParam === "published") {
+        initialView = "publications";
+      }
+      let authorFilterSet = false;
+      if (authorIdParam) {
+        const canonicalNameToId = getCanonicalNameToId();
+        let authorName = null;
+        for (const [name, id] of Object.entries(canonicalNameToId)) {
+          if (id === authorIdParam) {
+            authorName = name;
+            break;
+          }
+        }
+        if (authorName) {
+          clearFilters();
+          addFilter(authorName);
+          authorFilterSet = true;
+        }
+      } else if (authorNameParam) {
+        clearFilters();
+        setTimeout(() => {
+          const searchInput2 = document.getElementById("publications-search");
+          if (searchInput2) {
+            searchInput2.value = authorNameParam;
+            searchInput2.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+        }, 0);
+      } else {
+        clearFilters();
+      }
+      switchView(initialView);
+      if (initialView === "preprints") {
+        const filteredPreprints = filterPreprints();
+        displayPreprints(filteredPreprints);
+      } else {
+        const filteredPublications = filterPublications();
+        displayPublications(filteredPublications);
+      }
       updateFiltersForView();
       const searchInput = document.getElementById("publications-search");
       if (searchInput) {

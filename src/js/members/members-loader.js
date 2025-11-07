@@ -180,30 +180,34 @@ function buildDescription(member, categories) {
  * @param {Object} categories - Categories object
  * @returns {string} HTML string for member card
  */
+
+// Store member publication info globally after loading
+let memberHasPublications = {};
+
 function createMemberCard(memberId, member, categories) {
     const memberImagePath = `images/members/${memberId}.png`;
     const backgroundImagePath = `images/members/background.png`;
     const description = buildDescription(member, categories);
     const socialLinks = buildSocialLinks(member, memberId);
-    
+
     // Build "Currently at" text for former members
     let currentlyAt = '';
     if (member.date_out && member.current) {
         currentlyAt = `<p>Currently at ${member.current}</p>`;
     }
-    
+
     // Build home institution text for visitors
     let homeInstitution = '';
     if (member.status === 'visitor' && member.home) {
         homeInstitution = `<p>${member.home}</p>`;
     }
-    
+
     // Build dates for visitors
     let visitorDates = '';
     if (member.status === 'visitor') {
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        
+
         if (member.date_out) {
             // Former visitor: show date range
             const dateIn = new Date(member.date_in);
@@ -218,20 +222,68 @@ function createMemberCard(memberId, member, categories) {
             visitorDates = `<p>Since ${dateInStr}</p>`;
         }
     }
-    
+
+    // Determine member type
+    const isVisitor = member.status === 'visitor';
+    const isFormer = member.date_out !== null && member.date_out !== undefined;
+    const isActiveMember = !isVisitor && !isFormer;
+
+    // Publications button logic
+    let publicationsButton = '';
+    if (isActiveMember) {
+        publicationsButton = `<a class="member-publications-btn special" href="/publications.html?view=published&authorId=${encodeURIComponent(memberId)}">Publications</a>`;
+    } else if (!isVisitor && isFormer) {
+        // For former members only (not visitors), show button with authorName
+        publicationsButton = `<a class="member-publications-btn special" href="/publications.html?view=published&authorName=${encodeURIComponent(member.name)}">Publications</a>`;
+    }
+    // Social icons (full width) only for active members
+    let socialsRow = '';
+    let publicationsRow = '';
+    if (isActiveMember) {
+        socialsRow = `<div class="member-card-social-full">${socialLinks}</div>`;
+        publicationsRow = `<div class="member-card-publications-row">${publicationsButton}</div>`;
+    } else if (!isVisitor && isFormer) {
+        // For former members, show publications button only
+        publicationsRow = `<div class="member-card-publications-row">${publicationsButton}</div>`;
+    }
+    // For visitors and former visitors, do not show or reserve space for socials/publications
+
+    // Determine profile link (website > google scholar > none)
+    let profileUrl = '';
+    if (member.social && member.social.web) {
+        profileUrl = member.social.web;
+    } else if (member.social && member.social.google_scholar) {
+        profileUrl = member.social.google_scholar;
+    }
+
+    // Build clickable image and name if profileUrl exists
+    let imageBlock = '';
+    let nameBlock = '';
+    if (profileUrl) {
+        imageBlock = `<a class="image member-image-container" href="${profileUrl}" target="_blank" rel="noopener">
+            <img src="${backgroundImagePath}" class="member-background" alt="" />
+            <img src="${memberImagePath}" class="member-photo" alt="${member.name}" />
+        </a>`;
+        nameBlock = `<h3 class="major"><a href="${profileUrl}" target="_blank" rel="noopener">${member.name}</a></h3>`;
+    } else {
+        imageBlock = `<a class="image member-image-container" style="pointer-events:none;cursor:default;">
+            <img src="${backgroundImagePath}" class="member-background" alt="" />
+            <img src="${memberImagePath}" class="member-photo" alt="${member.name}" />
+        </a>`;
+        nameBlock = `<h3 class="major">${member.name}</h3>`;
+    }
+
     return `
-                <article>
-                    <a class="image member-image-container">
-                        <img src="${backgroundImagePath}" class="member-background" alt="" />
-                        <img src="${memberImagePath}" class="member-photo" alt="${member.name}" />
-                    </a>
-                    <h3 class="major">${member.name}</h3>
-                    ${description ? `<p>${description}</p>` : ''}
-                    ${homeInstitution}
-                    ${visitorDates}
-                    ${currentlyAt}
-                    ${socialLinks}
-                </article>`;
+        <article>
+            ${imageBlock}
+            ${nameBlock}
+            ${description ? `<p>${description}</p>` : ''}
+            ${homeInstitution}
+            ${visitorDates}
+            ${currentlyAt}
+            ${socialsRow}
+            ${publicationsRow}
+        </article>`;
 }
 
 /**
@@ -346,32 +398,51 @@ async function init() {
             loadMembers(),
             loadCategories()
         ]);
-        
+
+        // Fetch publications and build memberHasPublications map
+        memberHasPublications = {};
+        try {
+            const publicationsResp = await fetch('https://raw.githubusercontent.com/qudyma/qudyma_db/main/data/publications.json');
+            if (publicationsResp.ok) {
+                const publicationsData = await publicationsResp.json();
+                const entries = publicationsData.entries || [];
+                entries.forEach(pub => {
+                    if (Array.isArray(pub.author_ids)) {
+                        pub.author_ids.forEach(id => {
+                            memberHasPublications[id] = true;
+                        });
+                    }
+                });
+            }
+        } catch (e) {
+            console.warn('Could not load publications for member cards:', e);
+        }
+
         // Categorize members
         const groups = categorizeMembers(membersData);
-        
+
         // Sort all groups by category, date, and id
         // Former members use defense_date, others use date_in
         sortMembers(groups.members, false);
         sortMembers(groups.formerMembers, true);  // Use defense_date for former members
         sortMembers(groups.visitors, false);
         sortMembers(groups.formerVisitors, false);
-        
+
         // Render each section
         renderSection('members-section', groups.members, categories, 'Active Members');
         renderSection('former-members-section', groups.formerMembers, categories, 'Former Members');
         renderSection('visitors-section', groups.visitors, categories, 'Visitors');
         renderSection('former-visitors-section', groups.formerVisitors, categories, 'Former Visitors');
-        
+
         console.log('Members page loaded successfully');
         console.log('Active members:', groups.members.length);
         console.log('Former members:', groups.formerMembers.length);
         console.log('Visitors:', groups.visitors.length);
         console.log('Former visitors:', groups.formerVisitors.length);
-        
+
         // Set up email modal functionality
         setupEmailModal();
-        
+
     } catch (error) {
         console.error('Error loading members page:', error);
         document.querySelector('#wrapper').innerHTML = '<div class="inner"><p>Error loading members data. Please try again later.</p></div>';
