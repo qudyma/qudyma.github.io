@@ -51,7 +51,7 @@ function buildPage(pageName, components, template) {
         },
         'publications': {
             headExtra: components.publicationsStyles,
-            scriptsExtra: '<script src="assets/js/publications.js"></script>'
+            scriptsExtra: '<script src="assets/js/publications-bundle.js"></script>'
         }
     };
     

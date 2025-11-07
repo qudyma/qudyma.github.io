@@ -41,12 +41,29 @@ qudyma.github.io/
 
 ## 🚀 Quick Start
 
+### Development Workflow
+
+In **Terminal 1** - Run the local server:
 ```bash
-# One-time build
+npm run dev
+# This builds the site and starts a local server at http://localhost:8000
+```
+
+In **Terminal 2** - Watch for changes:
+```bash
+npm run watch
+# This automatically rebuilds when you edit files in src/
+```
+
+Now open your browser to `http://localhost:8000` and you'll see live updates!
+
+### Alternative: One-time build
+```bash
+# Build once without server
 npm run build
 
-# Watch and rebuild automatically
-npm run watch
+# Just serve without watching
+npm run serve
 ```
 
 ## 📝 Editing Guide
