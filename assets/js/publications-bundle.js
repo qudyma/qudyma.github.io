@@ -12,7 +12,7 @@
     qudymaAuthorsById: {},
     activeMembers: [],
     canonicalNameToId: {},
-    // map canonical author name -> author id from basics.json
+    // map canonical author name -> author id from members.json
     // Filter and view state
     selectedFilters: /* @__PURE__ */ new Set(),
     // Single filter set shared across both views
@@ -244,7 +244,7 @@
   // src/js/publications/data-loader.js
   async function loadAuthorsConfig() {
     const basicsTimestamp = Math.floor(Date.now() / (1e3 * 60 * 60 * 6));
-    const configUrl = `https://raw.githubusercontent.com/qudyma/qudyma_db/main/config/basics.json?v=${basicsTimestamp}`;
+    const configUrl = `https://raw.githubusercontent.com/qudyma/qudyma_db/main/config/members.json?v=${basicsTimestamp}`;
     const configResponse = await fetch(configUrl);
     if (!configResponse.ok) {
       throw new Error(`Failed to fetch QUDYMA members config: ${configResponse.status}`);
@@ -259,17 +259,23 @@
         const canonical = member.name;
         qudymaAuthorsMap[canonical.toLowerCase()] = canonical;
         canonicalNameToId[canonical] = authorId;
-        if (member.url) {
-          qudymaAuthorsUrls[canonical.toLowerCase()] = member.url;
+        if (member.social) {
+          const url = member.social.web || member.social.google_scholar;
+          if (url) {
+            qudymaAuthorsUrls[canonical.toLowerCase()] = url;
+          }
         }
-        if (member.date_in && !member.date_out) {
+        if (member.date_in && !member.date_out && member.status === "member") {
           activeMembers.push(canonical);
         }
         if (member.name_variants) {
           member.name_variants.forEach((variant) => {
             qudymaAuthorsMap[variant.toLowerCase()] = canonical;
-            if (member.url) {
-              qudymaAuthorsUrls[variant.toLowerCase()] = member.url;
+            if (member.social) {
+              const url = member.social.web || member.social.google_scholar;
+              if (url) {
+                qudymaAuthorsUrls[variant.toLowerCase()] = url;
+              }
             }
           });
         }

@@ -15,7 +15,7 @@ const state = {
     qudymaAuthorsUrls: {},
     qudymaAuthorsById: {},
     activeMembers: [],
-    canonicalNameToId: {}, // map canonical author name -> author id from basics.json
+    canonicalNameToId: {}, // map canonical author name -> author id from members.json
     
     // Filter and view state
     selectedFilters: new Set(), // Single filter set shared across both views
