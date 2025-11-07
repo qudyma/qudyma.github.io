@@ -1,0 +1,23 @@
+{
+  "name": "qudyma-website",
+  "version": "2.0.0",
+  "description": "QUDYMA Research Group Website",
+  "scripts": {
+    "build": "npm run build:js && npm run build:html",
+    "build:js": "esbuild src/js/publications/main.js --bundle --outfile=assets/js/publications-bundle.js --format=iife",
+    "build:html": "node build.js",
+    "watch": "nodemon --watch src -e html,css,js --exec npm run build",
+    "serve": "python3 -m http.server 8000",
+    "dev": "npm run build && npm run serve"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qudyma/qudyma.github.io.git"
+  },
+  "author": "QUDYMA",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.25.12",
+    "nodemon": "^3.0.1"
+  }
+}
