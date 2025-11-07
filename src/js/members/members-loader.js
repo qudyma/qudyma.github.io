@@ -385,6 +385,19 @@ function renderSection(containerId, members, categories, title) {
         featuresSection.innerHTML = members
             .map(member => createMemberCard(member.id, member, categories))
             .join('\n');
+        // Center cards if only one fits per row (responsive)
+        function updateCardCentering() {
+            const minCardWidth = 250; // px, matches CSS min-width
+            const sectionWidth = featuresSection.offsetWidth;
+            const cardsPerRow = Math.floor(sectionWidth / minCardWidth);
+            if (cardsPerRow <= 1) {
+                featuresSection.classList.add('single-card');
+            } else {
+                featuresSection.classList.remove('single-card');
+            }
+        }
+        updateCardCentering();
+        window.addEventListener('resize', updateCardCentering);
     }
 }
 
@@ -491,16 +504,15 @@ function setupEmailModal() {
         }
     });
     
-    // Email trigger clicks
-    document.addEventListener('click', (e) => {
-        const trigger = e.target.closest('.email-trigger');
-        if (trigger) {
-            e.preventDefault();
-            const email = trigger.dataset.email;
-            modalText.textContent = email;
-            modal.style.display = 'flex';
-        }
-    });
+        // Email trigger clicks (direct listeners only for .email-trigger)
+        document.querySelectorAll('.email-trigger').forEach(trigger => {
+            trigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                const email = trigger.dataset.email;
+                modalText.textContent = email;
+                modal.style.display = 'flex';
+            });
+        });
 }
 
 // Initialize when DOM is ready
