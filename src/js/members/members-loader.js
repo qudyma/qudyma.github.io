@@ -385,6 +385,19 @@ function renderSection(containerId, members, categories, title) {
         featuresSection.innerHTML = members
             .map(member => createMemberCard(member.id, member, categories))
             .join('\n');
+        // Center cards if only one fits per row (responsive)
+        function updateCardCentering() {
+            const minCardWidth = 250; // px, matches CSS min-width
+            const sectionWidth = featuresSection.offsetWidth;
+            const cardsPerRow = Math.floor(sectionWidth / minCardWidth);
+            if (cardsPerRow <= 1) {
+                featuresSection.classList.add('single-card');
+            } else {
+                featuresSection.classList.remove('single-card');
+            }
+        }
+        updateCardCentering();
+        window.addEventListener('resize', updateCardCentering);
     }
 }
 

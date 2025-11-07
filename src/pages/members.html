@@ -53,25 +53,6 @@
 
 </section>
 
-<!-- Smooth scroll navigation for members sections -->
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add smooth scroll behavior to members navigation links
-        document.querySelectorAll('#members-header-nav a').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-                e.preventDefault();
-                const targetId = this.getAttribute('href');
-                const targetSection = document.querySelector(targetId);
-                if (targetSection) {
-                    targetSection.scrollIntoView({ 
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-    });
-</script>
-
 <!-- Load members dynamically -->
 <script type="module" src="src/js/members/members-loader.js"></script>
+<script type="module" src="src/js/members/nav-dropdown.js"></script>
