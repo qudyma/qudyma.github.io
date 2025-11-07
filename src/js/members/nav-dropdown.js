@@ -81,7 +81,6 @@ export function setupMembersDropdown() {
         const dropdownToggle = document.getElementById('members-dropdown-toggle');
         if (dropdownToggle) {
             dropdownToggle.addEventListener('click', function(e) {
-                e.preventDefault();
                 toggleDropdownMenu();
             });
         }

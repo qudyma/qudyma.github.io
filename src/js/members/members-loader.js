@@ -504,16 +504,15 @@ function setupEmailModal() {
         }
     });
     
-    // Email trigger clicks
-    document.addEventListener('click', (e) => {
-        const trigger = e.target.closest('.email-trigger');
-        if (trigger) {
-            e.preventDefault();
-            const email = trigger.dataset.email;
-            modalText.textContent = email;
-            modal.style.display = 'flex';
-        }
-    });
+        // Email trigger clicks (direct listeners only for .email-trigger)
+        document.querySelectorAll('.email-trigger').forEach(trigger => {
+            trigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                const email = trigger.dataset.email;
+                modalText.textContent = email;
+                modal.style.display = 'flex';
+            });
+        });
 }
 
 // Initialize when DOM is ready
