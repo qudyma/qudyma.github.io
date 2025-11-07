@@ -20,18 +20,24 @@ qudyma.github.io/
 │   │   ├── opportunities.html
 │   │   └── contacts.html
 │   │
-│   ├── js/                       # Modular JavaScript (TODO)
-│   │   ├── publications/
-│   │   │   └── data-loader.js   # (Partial - not yet used)
+│   ├── js/                       # Modular JavaScript
+│   │   ├── publications/         # Publications page modules
+│   │   │   ├── state.js         # ✅ Centralized state management
+│   │   │   ├── utils.js         # ✅ Utility functions
+│   │   │   ├── data-loader.js   # ✅ API calls & data processing
+│   │   │   ├── filters.js       # ✅ Filtering & search logic
+│   │   │   ├── display.js       # ✅ HTML rendering
+│   │   │   ├── export.js        # ✅ JSON/BibTeX downloads
+│   │   │   └── main.js          # ✅ Entry point & initialization
 │   │   └── utils/
-│   │       └── helpers.js       # (Partial - not yet used)
+│   │       └── helpers.js       # (Future expansion)
 │   │
 │   └── template.html             # Base HTML template
 │
 ├── assets/                       # Static assets
 │   ├── css/
 │   ├── js/
-│   │   └── publications.js      # ACTIVE (1243 lines - needs splitting)
+│   │   └── publications-bundle.js  # ✅ Bundled JS (35.5kb, auto-generated)
 │   └── images/
 │
 ├── *.html                        # Built pages (DO NOT EDIT!)
@@ -96,29 +102,52 @@ template.html + header.html + menu.html + page.html + footer.html
 
 The build script does simple placeholder replacement - no complex tooling.
 
-## ⏳ TODO: JavaScript Refactoring
+## ✅ JavaScript Architecture (Refactored!)
 
-`assets/js/publications.js` (1243 lines) should be split into:
+The publications page has been **completely refactored** from a 1,244-line monolithic file into a modern modular architecture:
 
-- `state.js` - Global variables
-- `filters.js` - Filter management
-- `display.js` - Rendering logic
-- `search.js` - Search functionality
-- `data-loader.js` - API calls
+### Module Structure
+- **`state.js`** (75 lines) - Centralized state management with getter/setter API
+- **`utils.js`** (200+ lines) - Reusable utility functions (text processing, formatting, LaTeX conversion)
+- **`data-loader.js`** (180+ lines) - API calls with smart caching (6h for authors, 1h for publications)
+- **`filters.js`** (290+ lines) - Search, author filters, year range, view switching
+- **`display.js`** (280+ lines) - HTML rendering with proper grouping and formatting
+- **`export.js`** (230+ lines) - JSON and BibTeX download functionality
+- **`main.js`** (65 lines) - Application initialization and event wiring
 
-**Why not done yet?** Publications page works correctly. Modularization needs careful testing and decision on bundling strategy.
+### Build System
+- **esbuild** - Modern JavaScript bundler
+- **Bundle size**: 35.5kb
+- **Build time**: <10ms
+- **Format**: IIFE (browser-compatible, no module loader needed)
+
+### Build Commands
+```bash
+npm run build:js      # Bundle ES6 modules → publications-bundle.js
+npm run build:html    # Generate HTML from templates
+npm run build         # Run both (js + html)
+npm run dev           # Build + serve + watch for changes
+```
+
+### Benefits
+✅ **Maintainable**: Clear separation of concerns  
+✅ **Testable**: Isolated modules  
+✅ **Fast**: Optimized bundling (<10ms)  
+✅ **Modern**: ES6 modules + build tooling  
+✅ **DRY**: Shared utilities across modules
 
 ## 📦 Dependencies
 
 ```json
 {
   "devDependencies": {
-    "nodemon": "^3.0.1"  // Watch mode only
+    "esbuild": "^0.25.12",  // JavaScript bundler
+    "nodemon": "^3.0.1"     // File watcher for auto-rebuild
   }
 }
 ```
 
-No build tool bloat!
+Modern build tooling for a professional development experience!
 
 ## 🎯 Benefits
 
