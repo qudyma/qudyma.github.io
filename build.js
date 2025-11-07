@@ -29,7 +29,8 @@ function loadComponents() {
         header: readFile(path.join(componentsDir, 'header.html')),
         menu: readFile(path.join(componentsDir, 'menu.html')),
         footer: readFile(path.join(componentsDir, 'footer.html')),
-        publicationsStyles: readFile(path.join(componentsDir, 'publications-styles.html'))
+        publicationsStyles: readFile(path.join(componentsDir, 'publications-styles.html')),
+        membersStyles: readFile(path.join(componentsDir, 'members-styles.html'))
     };
 }
 
@@ -62,10 +63,30 @@ function buildPage(pageName, components, template) {
         );
     }
     
+    // Add members navigation to header for members page
+    if (pageName === 'members') {
+        header = header.replace(
+            '<nav>',
+            `<div id="members-header-nav">
+		<ul>
+			<li><a href="#members-section">Active Members</a></li>
+			<li><a href="#former-members-section">Former Members</a></li>
+			<li><a href="#visitors-section">Visitors</a></li>
+			<li><a href="#former-visitors-section">Former Visitors</a></li>
+		</ul>
+	</div>
+	<nav>`
+        );
+    }
+    
     // Page-specific configurations
     const pageConfig = {
         'index': {
             headExtra: '',
+            scriptsExtra: ''
+        },
+        'members': {
+            headExtra: components.membersStyles,
             scriptsExtra: ''
         },
         'publications': {
@@ -84,6 +105,11 @@ function buildPage(pageName, components, template) {
         .replace('{{FOOTER}}', components.footer)
         .replace('{{HEAD_EXTRA}}', config.headExtra)
         .replace('{{SCRIPTS_EXTRA}}', config.scriptsExtra);
+    
+    // Replace page-specific placeholders in content
+    if (pageName === 'members') {
+        html = html.replace('{{MEMBERS_STYLES}}', components.membersStyles);
+    }
     
     // Add index-banner class to index page banner
     if (pageName === 'index') {
