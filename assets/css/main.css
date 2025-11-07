@@ -3385,15 +3385,22 @@ input, select, textarea {
 
 	#banner {
 		padding: 1em 0em 1em 0em ;
+		width: 100vw;
+		max-width: 100vw;
+
 	}
 
 		#banner .inner {
 			margin: 0 auto;
-			width: 70em;
+			width: 100%;
+			max-width: 70em;
+
 		}
 
 		#banner.index-banner .inner {
-			width: 56em;
+			width: 100%;
+			max-width: 56em;
+
 		}
 
 		#banner .logo {
