@@ -466,8 +466,13 @@ function formatAuthorAsInitials(fullName) {
 // Load and display preprints (publications without journal_ref)
 async function loadPreprints() {
     try {
+        // Cache-busting: timestamp updates every 6 hours for basics.json (changes less frequently)
+        const basicsTimestamp = Math.floor(Date.now() / (1000 * 60 * 60 * 6));
+        // Cache-busting: timestamp updates every 1 hour for publications.json (updates more frequently)
+        const publicationsTimestamp = Math.floor(Date.now() / (1000 * 60 * 60));
+        
         // First, fetch the QUDYMA members config
-        const configUrl = 'https://raw.githubusercontent.com/qudyma/qudyma_db/main/config/basics.json';
+        const configUrl = `https://raw.githubusercontent.com/qudyma/qudyma_db/main/config/basics.json?v=${basicsTimestamp}`;
         const configResponse = await fetch(configUrl);
         
         if (!configResponse.ok) {
@@ -509,7 +514,7 @@ async function loadPreprints() {
         // Keep the order from basics.json (don't sort)
         
         // Now fetch the publications database
-        const dbUrl = 'https://raw.githubusercontent.com/qudyma/qudyma_db/main/data/publications.json';
+        const dbUrl = `https://raw.githubusercontent.com/qudyma/qudyma_db/main/data/publications.json?v=${publicationsTimestamp}`;
         const response = await fetch(dbUrl);
         
         if (!response.ok) {
