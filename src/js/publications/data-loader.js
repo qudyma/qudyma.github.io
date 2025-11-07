@@ -7,14 +7,14 @@ import * as state from './state.js';
 import { extractPublicationYear } from './utils.js';
 
 /**
- * Load authors configuration from basics.json
+ * Load authors configuration from members.json
  * @returns {Promise<Object>} Configuration data
  */
 export async function loadAuthorsConfig() {
-    // Cache-busting: timestamp updates every 6 hours for basics.json (changes less frequently)
+    // Cache-busting: timestamp updates every 6 hours for members.json (changes less frequently)
     const basicsTimestamp = Math.floor(Date.now() / (1000 * 60 * 60 * 6));
     
-    const configUrl = `https://raw.githubusercontent.com/qudyma/qudyma_db/main/config/basics.json?v=${basicsTimestamp}`;
+    const configUrl = `https://raw.githubusercontent.com/qudyma/qudyma_db/main/config/members.json?v=${basicsTimestamp}`;
     const configResponse = await fetch(configUrl);
     
     if (!configResponse.ok) {
@@ -29,7 +29,7 @@ export async function loadAuthorsConfig() {
     const canonicalNameToId = {};
     const activeMembers = [];
     
-    // basics.json is keyed by author id; iterate entries to capture ids
+    // members.json is keyed by author id; iterate entries to capture ids
     Object.entries(configData).forEach(([authorId, member]) => {
         if (member && member.name) {
             const canonical = member.name;
@@ -37,12 +37,16 @@ export async function loadAuthorsConfig() {
             qudymaAuthorsMap[canonical.toLowerCase()] = canonical; // Store canonical name
             canonicalNameToId[canonical] = authorId; // map canonical name -> id
             
-            if (member.url) {
-                qudymaAuthorsUrls[canonical.toLowerCase()] = member.url;
+            // Get URL: prefer social.web, fallback to social.google_scholar
+            if (member.social) {
+                const url = member.social.web || member.social.google_scholar;
+                if (url) {
+                    qudymaAuthorsUrls[canonical.toLowerCase()] = url;
+                }
             }
 
-            // Check if member is active (has date_in and date_out is null)
-            if (member.date_in && !member.date_out) {
+            // Check if member is active (status is 'member', not 'visitor')
+            if (member.date_in && !member.date_out && member.status === 'member') {
                 activeMembers.push(canonical);
             }
 
@@ -50,8 +54,11 @@ export async function loadAuthorsConfig() {
             if (member.name_variants) {
                 member.name_variants.forEach(variant => {
                     qudymaAuthorsMap[variant.toLowerCase()] = canonical; // Map variant to canonical name
-                    if (member.url) {
-                        qudymaAuthorsUrls[variant.toLowerCase()] = member.url;
+                    if (member.social) {
+                        const url = member.social.web || member.social.google_scholar;
+                        if (url) {
+                            qudymaAuthorsUrls[variant.toLowerCase()] = url;
+                        }
                     }
                 });
             }
