@@ -1,0 +1,197 @@
+<style>
+    /* Members navigation in header */
+    #members-header-nav {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.35s ease, visibility 0.35s;
+    }
+    
+    /* Hide navigation when header is in alt (transparent) state */
+    #header.alt #members-header-nav {
+        opacity: 0;
+        visibility: hidden;
+    }
+    
+    #members-header-nav ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 2em;
+    }
+    
+    #members-header-nav li {
+        margin: 0;
+        padding: 0;
+    }
+    
+    #members-header-nav a {
+        color: rgba(255, 255, 255, 0.5);
+        text-decoration: none;
+        font-weight: 400;
+        font-size: 0.8em;
+        text-transform: uppercase;
+        letter-spacing: 0.075em;
+        transition: color 0.2s ease-in-out;
+        white-space: nowrap;
+        border-bottom: 0;
+    }
+    
+    #members-header-nav a:hover {
+        color: #ffffff;
+    }
+    
+    /* Add scroll offset to account for fixed header */
+    #members-section,
+    #former-members-section,
+    #visitors-section,
+    #former-visitors-section {
+        scroll-margin-top: 5em;
+    }
+
+    /* Member card image container with overlay */
+    .member-image-container {
+        position: relative;
+        display: block;
+        width: 100%;
+        overflow: visible;
+    }
+    
+    /* Background image - full width */
+    .member-background {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+    
+    /* Member photo - overlayed and centered, uncropped */
+    .member-photo {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        height: 100%;
+        width: auto;
+        object-fit: contain;
+    }
+    
+    /* Override feature card sizing for members page - 4 cards per row */
+    #wrapper .features {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+    }
+    
+    /* Reduce spacing between sections */
+    #wrapper > section.wrapper {
+        margin: 1em 0;
+        padding: 0;
+    }
+    
+    #wrapper > section.wrapper:first-child {
+        margin-top: 2em;
+    }
+    
+    #wrapper .features article {
+        width: calc(25% - 0.75em);
+        margin: 0.5em 1em 0.5em 0;
+        min-width: 250px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    #wrapper .features article:nth-child(4n) {
+        margin-right: 0;
+    }
+    
+    /* Reset the left-most cards (1st, 5th, 9th, etc.) to have no left margin */
+    #wrapper .features article:nth-child(4n+1) {
+        margin-left: 0;
+    }
+    
+    /* Make image container not grow */
+    #wrapper .features article .image {
+        flex-shrink: 0;
+    }
+    
+    /* Title stays at same position */
+    #wrapper .features article h3.major {
+        flex-shrink: 0;
+    }
+    
+    /* Content area grows to push social links to bottom */
+    #wrapper .features article > p {
+        margin-bottom: 0.5em;
+    }
+    
+    /* Social links paragraph stays at bottom */
+    #wrapper .features article > p:last-of-type {
+        margin-top: auto;
+        padding-top: 1em;
+    }
+    
+    /* Email modal styles */
+    .email-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10000;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .email-modal-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+    }
+    
+    .email-modal-content {
+        position: relative;
+        background-color: #2e3842;
+        padding: 2em 3em;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        max-width: 500px;
+        width: 90%;
+        z-index: 10001;
+    }
+    
+    .email-modal-content p {
+        margin: 0;
+        font-size: 1.2em;
+        color: #ffffff;
+        text-align: center;
+        word-break: break-word;
+    }
+    
+    .email-modal-close {
+        position: absolute;
+        top: 0.5em;
+        right: 0.75em;
+        font-size: 2em;
+        color: #ffffff;
+        cursor: pointer;
+        line-height: 1;
+        transition: color 0.2s;
+    }
+    
+    .email-modal-close:hover {
+        color: #f56a6a;
+    }
+</style>
