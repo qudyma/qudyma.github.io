@@ -1,0 +1,18 @@
+{
+  "name": "qudyma-website",
+  "version": "2.0.0",
+  "description": "QUDYMA Research Group Website",
+  "scripts": {
+    "build": "node build.js",
+    "watch": "nodemon --watch src -e html,css,js --exec npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qudyma/qudyma.github.io.git"
+  },
+  "author": "QUDYMA",
+  "license": "MIT",
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
