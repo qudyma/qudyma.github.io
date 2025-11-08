@@ -48,7 +48,7 @@ function getCategoryTitle(categoryCode, categories, status) {
     
     if (!categoryList) return '';
     
-    const category = Object.values(categoryList).find(cat => cat.order === categoryCode);
+    const category = Object.values(categoryList).find(cat => parseInt(cat.order) === parseInt(categoryCode));
     return category ? category.title : '';
 }
 
@@ -111,36 +111,44 @@ function buildSocialLinks(member, memberId) {
 function buildDescription(member, categories) {
     const parts = [];
     
-    // Category title
-    let categoryTitle = '';
+    // Fellowship first if present
+    let fellowshipAndTitle = '';
+    if (member.fellowship) {
+        fellowshipAndTitle += member.fellowship;
+    }
     if (member.category !== undefined) {
-        categoryTitle = getCategoryTitle(member.category, categories, member.status);
+        const categoryTitle = getCategoryTitle(member.category, categories, member.status);
         if (categoryTitle) {
-            parts.push(categoryTitle);
+            if (fellowshipAndTitle) {
+                fellowshipAndTitle += ' ' + categoryTitle;
+            } else {
+                fellowshipAndTitle = categoryTitle;
+            }
         }
+    }
+    if (fellowshipAndTitle) {
+        parts.push(fellowshipAndTitle);
     }
     
     // Supervisors/collaborators based on category and status
     if (member.category && member.supervisors && member.supervisors.length > 0) {
         const categoryNum = parseInt(member.category);
         let prefix = null;
-        
         if (member.status === 'visitor') {
-            // For visitors: category 02 = "working with", category 03 = "supervised by"
+            // For visitors: category 2 = "working with", category 3+ = "supervised by"
             if (categoryNum === 2) {
                 prefix = 'working with ';
-            } else if (categoryNum === 3) {
+            } else if (categoryNum >= 3) {
                 prefix = 'supervised by ';
             }
         } else {
-            // For members: category 07 = "working with", category 08+ = "supervised by"
-            if (categoryNum === 7) {
+            // For members: category 6 = "working with", category 7+ = "supervised by"
+            if (categoryNum === 6) {
                 prefix = 'working with ';
-            } else if (categoryNum >= 8) {
+            } else if (categoryNum >= 7) {
                 prefix = 'supervised by ';
             }
         }
-        
         if (prefix) {
             let supervisorText = prefix;
             if (member.supervisors.length === 1) {
@@ -259,17 +267,17 @@ function createMemberCard(memberId, member, categories) {
     // Build clickable image and name if profileUrl exists
     let imageBlock = '';
     let nameBlock = '';
+    function imageTagBlock() {
+        // Try to load member image, fallback to only background if not found
+        // Use onerror to hide member-photo if image fails to load
+        return `<img src="${backgroundImagePath}" class="member-background" alt="" />
+            <img src="${memberImagePath}" class="member-photo" alt="${member.name}" onerror="this.style.display='none'" />`;
+    }
     if (profileUrl) {
-        imageBlock = `<a class="image member-image-container" href="${profileUrl}" target="_blank" rel="noopener">
-            <img src="${backgroundImagePath}" class="member-background" alt="" />
-            <img src="${memberImagePath}" class="member-photo" alt="${member.name}" />
-        </a>`;
+        imageBlock = `<a class="image member-image-container" href="${profileUrl}" target="_blank" rel="noopener">${imageTagBlock()}</a>`;
         nameBlock = `<h3 class="major"><a href="${profileUrl}" target="_blank" rel="noopener">${member.name}</a></h3>`;
     } else {
-        imageBlock = `<a class="image member-image-container" style="pointer-events:none;cursor:default;">
-            <img src="${backgroundImagePath}" class="member-background" alt="" />
-            <img src="${memberImagePath}" class="member-photo" alt="${member.name}" />
-        </a>`;
+        imageBlock = `<a class="image member-image-container" style="pointer-events:none;cursor:default;">${imageTagBlock()}</a>`;
         nameBlock = `<h3 class="major">${member.name}</h3>`;
     }
 
